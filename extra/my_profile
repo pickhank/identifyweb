@@ -1,0 +1,55 @@
+# Server A &B
+TOMCAT_HOME_A="/opt/apache-tomcat-7.0.85"
+TOMCAT_HOME_B="/opt/apache-tomcat2"
+APACHE_HOME="/etc/httpd"
+MY_WORKSPACE="/root/apps/DebitPayWeb"
+
+_switchTomcat()
+{
+    M=$1
+    [ "$M" == "" ] && M="A"
+	
+    [ "$M" == "A" ] && TOMCAT_HOME=${TOMCAT_HOME_A} && MVN_MODE="prod" && export TOMCAT_HOME && export MVN_MODE
+    [ "$M" == "B" ] && TOMCAT_HOME=${TOMCAT_HOME_B} && MVN_MODE="test" && export TOMCAT_HOME && export MVN_MODE
+		
+	echo "Current Active Tomcat: ${TOMCAT_HOME}"
+	echo "Use sw A|B to switch Tomcat"
+}
+alias sw="_switchTomcat"
+
+alias cdt="cd ${TOMCAT_HOME}/logs"
+alias cdl="cd ${APACHE_HOME}/logs"
+
+alias cda="cd ${APACHE_HOME}"
+alias cdb="cd ${TOMCAT_HOME}"
+alias cdw="cd ${MY_WORKSPACE}"
+
+#alias vi="vim"
+
+_taillog()
+{
+   day=`date +%Y-%m-%d`
+   tail -f ${TOMCAT_HOME}/logs/catalina.$day.out;
+}
+alias tlog="_taillog"
+
+_catlogx()
+{
+   XX=$1
+   Days=$2
+   [ "$Days" == "" ] && Days=0
+
+   day=$(date +%Y-%m-%d -d -${Days}day)
+   cat ${TOMCAT_HOME}/logs/catalina.$day.out |grep "$XX"
+}
+alias clog="_catlogx"
+
+_vilogx()
+{
+   Days=$1
+   [ "$Days" == "" ] && Days=0
+
+   day=$(date +%Y-%m-%d -d -${Days}day)
+   vim ${TOMCAT_HOME}/logs/catalina.$day.out
+}
+alias vlog="_vilogx"

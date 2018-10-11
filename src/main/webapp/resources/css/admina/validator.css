@@ -1,0 +1,84 @@
+.validator .validator_message{
+	background:url("../../images/admina/validate/validator.gif") no-repeat scroll -25px -75px;
+	display:inline;
+	margin-left:5px;
+	padding:2px 2px 2px 18px;
+	vertical-align:-1px;
+	white-space:nowrap;
+	+height:18px; 
+    +line-height:22px; 
+	_line-height:16px;
+}
+
+.validator .init {/*
+	display:block;
+	margin-left:0px;
+	padding:0px;
+	white-space:normal;*/
+	background-color:#E2F5FF;
+	background-position:1px 2px;
+	border:1px solid #00A8FF;
+}
+
+.validator .focus {
+	background-color:#E2F5FF;
+	background-position:1px 2px;
+	border:1px solid #00A8FF;
+}
+
+.validator .wait {
+	background-color:#E2F5FF;
+	background-position:1px 2px;
+	border:1px solid #00A8FF;
+}
+
+.validator .warn {
+	background-color:#FFF2E9;
+	background-position:1px -18px;
+	border:1px solid #FF6600;
+}
+
+.validator .error {
+	background-color:#FFF2E9;
+	background-position:1px -38px;
+	border-color:#FF6600;
+}
+
+.validator .pass {
+	background-color:#E6FFE6;
+	background-position:1px -57px;
+	border:1px solid #00BE00;
+}
+
+
+.colordlg{
+	background-color:#F0FAEB;
+	border:2px dashed #749F4D;
+	line-height:160%;
+	padding:2px;
+	width:100px;
+}
+.mysource,.myauthor,.mykeyword{	
+    background-color:#f7f9fc;
+    border: 5px solid #107abf;
+    line-height: 160%;
+    padding: 2px;
+    width: 300px;
+    z-index: 10001;
+}
+.coolbg4 {
+    background-color:#e5f4fd;
+    border-bottom: 1px solid #C9CFC1;
+    height: 24px;
+    line-height: 24px;
+    text-align: right;
+	padding-right:10px;
+	cursor:move;
+}
+.wsselect{
+	padding:5px;
+	text-align:left;
+    height: 80px;
+    overflow: auto;
+}
+.wsselect a{ color:#5c93b7;}

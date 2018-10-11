@@ -1,0 +1,412 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.template.busi.service;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.woodare.core.constant.CommonConstant;
+import com.woodare.core.jpa.model.SystemProperties;
+import com.woodare.core.jpa.model.SystemRole;
+import com.woodare.core.jpa.model.SystemRoleUser;
+import com.woodare.core.jpa.model.SystemUser;
+import com.woodare.core.jpa.model.data.EnumUserRole;
+import com.woodare.core.jpa.service.ISystemPropertiesDAO;
+import com.woodare.core.jpa.service.ISystemRoleDAO;
+import com.woodare.core.jpa.service.ISystemRoleUserDAO;
+import com.woodare.core.jpa.service.ISystemUserDAO;
+import com.woodare.core.web.startup.InitializeDatabase.IInitializer;
+import com.woodare.framework.utils.JavaMD5Hash;
+import com.woodare.framework.utils.SysProperties;
+import com.woodare.template.constant.SystemPropertiesConstant;
+import com.woodare.template.jpa.model.DownMerchant;
+import com.woodare.template.jpa.model.data.EnumDownUserStatus;
+import com.woodare.template.jpa.model.data.EnumMercCategory;
+import com.woodare.template.jpa.persistence.persistence.IDownMerchantDAO;
+
+/**
+ * Please describe
+ * 
+ * @version 1.0
+ * @createDate 2013-6-11 下午5:55:39
+ * @author lu_feng
+ */
+@Service
+public class InitializeDataService implements IInitializer {
+	private final Logger log = Logger.getLogger(InitializeDataService.class);
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void execute() {
+		init();
+	}
+
+	@Autowired
+	private IDownMerchantDAO downMerchantDAO;
+
+	@Autowired
+	private ISystemUserDAO systemUserDAO;
+
+	@Autowired
+	private ISystemRoleUserDAO systemRoleUserDAO;
+
+	@Autowired
+	private ISystemRoleDAO systemRoleDAO;
+
+	@Autowired
+	private ISystemPropertiesDAO systemPropertiesDAO;
+
+//	@Autowired
+//	private IPasswayRouteMerchantDAO passwayRouteMerchantDAO;
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void init() {
+		List<SystemProperties> systemProperties = systemPropertiesDAO.findAll();
+
+		if (systemProperties == null || systemProperties.size() <= 0) {
+			log.info("First time to initialize datbase");
+			try {
+				initRoleAndRights();
+
+				initUsers();
+
+				systemProperties = initSystemProperties();
+
+			} catch (Exception e) {
+				log.error("Can not init SystemProperties, exit -1", e);
+				System.exit(-1);
+			}
+		}
+
+		try {
+			upgradeSystemProperties(systemProperties);
+		} catch (Exception e) {
+			log.error("Can not upgrade SystemProperties, exit -1", e);
+			System.exit(-1);
+		}
+	}
+
+	private void upgradeSystemProperties(List<SystemProperties> properties) {
+		SystemProperties propversion = null;
+		for (SystemProperties prop : properties) {
+			if (prop.getPcode().equals(SystemPropertiesConstant.CODE_SYSTEM_VERSION)) {
+				propversion = prop;
+				break;
+			}
+		}
+		if (propversion.getPvalue().compareTo("1.0.002") < 0) {
+			upgradeToVersion1_0_002(propversion);
+		}
+		if (propversion.getPvalue().compareTo("1.0.003") < 0) {
+			upgradeToVersion1_0_003(propversion);
+		}
+		if (propversion.getPvalue().compareTo("1.0.004") < 0) {
+			upgradeToVersion1_0_004(propversion);
+		}
+		if (propversion.getPvalue().compareTo("1.0.005") < 0) {
+			upgradeToVersion1_0_005(propversion);
+		}
+	}
+
+	private void upgradeToVersion1_0_005(SystemProperties propversion) {
+		try {
+			propversion.setPvalue("1.0.005");
+			systemPropertiesDAO.update(propversion);
+
+			SystemUser admin = this.systemUserDAO.findByUsername(SysProperties.getInstance().getProperty(SystemPropertiesConstant.CODE_SUPER_ACCOUNTNAME));
+			Date date = new Date();
+
+			SysProperties properties = SysProperties.getInstance();
+
+			// 爱农生成文件存放目录
+			SystemProperties systemProperties = new SystemProperties();
+			systemProperties.setPcode(SystemPropertiesConstant.CODE_CPCN_CERTS_PATH);
+			systemProperties.setPvalue(properties.getProperty(SystemPropertiesConstant.CODE_CPCN_CERTS_PATH, "/var/www/certs/cpcn"));
+			systemProperties.setPname("中金密钥路径");
+			systemProperties.setPdesc("");
+			systemProperties.setSortNum(10);
+			systemProperties.setCreatorId(admin.getId());
+			systemProperties.setCreateDate(date);
+			systemProperties.setIsEditFlag(true);
+			systemPropertiesDAO.save(systemProperties);
+
+		} catch (Exception e) {
+
+		}
+	}
+
+	private void upgradeToVersion1_0_004(SystemProperties propversion) {
+		try {
+			propversion.setPvalue("1.0.004");
+			systemPropertiesDAO.update(propversion);
+
+			// // 银猫电子商务有限公司
+			// PasswayRouteMerchant routeMerchant = new PasswayRouteMerchant();
+			// routeMerchant.setChannel(EnumDownNoCardChannel.AINO);
+			// routeMerchant.setChannelAccName("银猫电子商务");
+			// routeMerchant.setChannelAccNo("929080095023532");
+			// routeMerchant.setSignKey(AesUtils.encrypt("ZJyjX3zDFNJ4E8GrVkdWhkxxf5CRXeet", EnumDownNoCardChannel.AINO.getAesKey()));
+			// routeMerchant.setExtra("http://www.yinmao0010.com");
+			// this.passwayRouteMerchantDAO.updateForce(routeMerchant);
+		} catch (Exception e) {
+
+		}
+	}
+
+	private void upgradeToVersion1_0_003(SystemProperties propversion) {
+		try {
+			propversion.setPvalue("1.0.003");
+			systemPropertiesDAO.update(propversion);
+
+			// // 艾福斯商商城
+			// PasswayRouteMerchant routeMerchant = new PasswayRouteMerchant();
+			// routeMerchant.setChannel(EnumDownNoCardChannel.AINO);
+			// routeMerchant.setChannelAccName("艾福斯商商城");
+			// routeMerchant.setChannelAccNo("929010095023247");
+			// routeMerchant.setSignKey(AesUtils.encrypt("JENB7ZXKeJ7DP7z7xjdgxY5zNc6X5Hsg", EnumDownNoCardChannel.AINO.getAesKey()));
+			// routeMerchant.setExtra("http://www.fccfx.cn");
+			// this.passwayRouteMerchantDAO.updateForce(routeMerchant);
+			//
+			// // 宝果商贸
+			// routeMerchant = new PasswayRouteMerchant();
+			// routeMerchant.setChannel(EnumDownNoCardChannel.AINO);
+			// routeMerchant.setChannelAccName("宝果商贸");
+			// routeMerchant.setChannelAccNo("929070095023432");
+			// routeMerchant.setSignKey(AesUtils.encrypt("kbh3mNEd7mKVFzcnsKtVTwtXUa2PsrUb", EnumDownNoCardChannel.AINO.getAesKey()));
+			// routeMerchant.setExtra("http://www.bg8856.com");
+			// this.passwayRouteMerchantDAO.updateForce(routeMerchant);
+			//
+			// // 哈尔滨堡斐桦
+			// routeMerchant = new PasswayRouteMerchant();
+			// routeMerchant.setChannel(EnumDownNoCardChannel.AINO);
+			// routeMerchant.setChannelAccName("哈尔滨堡斐桦");
+			// routeMerchant.setChannelAccNo("929010095023431");
+			// routeMerchant.setSignKey(AesUtils.encrypt("XxBAT7yAkXEmVrZxtd8AacpBmCgZ7CF2", EnumDownNoCardChannel.AINO.getAesKey()));
+			// routeMerchant.setExtra("http://www.baofeihua.com");
+			// this.passwayRouteMerchantDAO.updateForce(routeMerchant);
+		} catch (Exception e) {
+
+		}
+	}
+
+	private void upgradeToVersion1_0_002(SystemProperties propversion) {
+		propversion.setPvalue("1.0.002");
+		systemPropertiesDAO.update(propversion);
+
+		// SystemUser admin =
+		this.systemUserDAO.findByUsername(SysProperties.getInstance().getProperty(SystemPropertiesConstant.CODE_SUPER_ACCOUNTNAME));
+		Date date = new Date();
+
+		DownMerchant downMerchant = new DownMerchant();
+		downMerchant.setMercCategory(EnumMercCategory.NONE);
+		// downMerchant.setAgentId(agentId);
+		// downMerchant.setBankName(bankName);
+		// downMerchant.setCardNo(cardNo);
+		// downMerchant.setName(name);
+		// downMerchant.setPhone(phone);
+		downMerchant.setLimitIps("");
+
+		downMerchant.setMchNo("A0001");
+		downMerchant.setName("测试机构");
+
+		downMerchant.setEncKey("1234567812345678");
+		downMerchant.setPayKey("");
+		downMerchant.setSignKey("1234");
+
+		downMerchant.setStatus(EnumDownUserStatus.ACTIVE);
+
+		downMerchant.setEnableNotify(true);
+
+		// downMerchant.setFeeRatio(new BigDecimal("6.0"));
+		// downMerchant.setAddFeeAmt(new BigDecimal("0"));
+		downMerchant.setDrawFeeRatio(new BigDecimal("0"));
+		downMerchant.setAddDrawFeeAmt(new BigDecimal("1"));
+
+		downMerchant.setCreateDate(date);
+		downMerchant.setUpdateDate(date);
+
+		downMerchantDAO.saveForce(downMerchant);
+	}
+
+	/**
+	 * @return
+	 * @throws Exception
+	 */
+	private List<SystemProperties> initSystemProperties() throws Exception {
+		SysProperties properties = SysProperties.getInstance();
+
+		List<SystemProperties> allSystemProperties = new ArrayList<SystemProperties>();
+
+		SystemUser admin = this.systemUserDAO.findByUsername(SysProperties.getInstance().getProperty(SystemPropertiesConstant.CODE_SUPER_ACCOUNTNAME));
+
+		Date date = new Date();
+
+		// 站点根访问路径
+		SystemProperties systemProperties = new SystemProperties();
+		systemProperties.setPcode(SystemPropertiesConstant.CODE_ROOT_URL);
+		systemProperties.setPvalue(properties.getProperty(SystemPropertiesConstant.CODE_ROOT_URL, "http://www.woodare.com"));
+		systemProperties.setPname("站点根路径");
+		systemProperties.setPdesc("需根据实际部署的服务器访问路径进行调整，否则将无法正常访问本站");
+		systemProperties.setSortNum(1);
+		systemProperties.setCreatorId(admin.getId());
+		systemProperties.setCreateDate(date);
+		systemProperties.setIsEditFlag(true);
+		systemPropertiesDAO.save(systemProperties);
+		allSystemProperties.add(systemProperties);
+
+		// 静态资源文件访问路径
+		systemProperties = new SystemProperties();
+		systemProperties.setPcode(SystemPropertiesConstant.CODE_ROOT_RESOURCE_URL);
+		systemProperties.setPvalue(properties.getProperty(SystemPropertiesConstant.CODE_ROOT_RESOURCE_URL, "http://www.woodare.com"));
+		systemProperties.setPname("静态文件访问地址");
+		systemProperties.setPdesc("CSS、JS、图片等静态文件访问地址");
+		systemProperties.setSortNum(2);
+		systemProperties.setCreatorId(admin.getId());
+		systemProperties.setCreateDate(date);
+		systemProperties.setIsEditFlag(true);
+		systemPropertiesDAO.save(systemProperties);
+
+		// 站点别名（公开）访问根路径
+		systemProperties = new SystemProperties();
+		systemProperties.setPcode(SystemPropertiesConstant.CODE_BASE_URL_ALIAS);
+		systemProperties.setPvalue(properties.getProperty(SystemPropertiesConstant.CODE_BASE_URL_ALIAS, "http://www.woodare.com"));
+		systemProperties.setPname("站点别名（公开）路径");
+		systemProperties.setPdesc("对外公开访问使用的域名路径地址信息");
+		systemProperties.setSortNum(3);
+		systemProperties.setCreatorId(admin.getId());
+		systemProperties.setCreateDate(date);
+		systemProperties.setIsEditFlag(true);
+		systemPropertiesDAO.save(systemProperties);
+		allSystemProperties.add(systemProperties);
+
+		// 后台程序版本号
+		systemProperties = new SystemProperties();
+		systemProperties.setPcode(SystemPropertiesConstant.CODE_SYSTEM_VERSION);
+		systemProperties.setPvalue("1.0.001");
+		systemProperties.setPname("后台服务器版本信息");
+		systemProperties.setPdesc("");
+		systemProperties.setSortNum(99);
+		systemProperties.setCreatorId(admin.getId());
+		systemProperties.setCreateDate(date);
+		systemProperties.setIsEditFlag(false);
+		systemPropertiesDAO.save(systemProperties);
+		allSystemProperties.add(systemProperties);
+
+		return allSystemProperties;
+
+	}
+
+	/**
+	 * 初始化管理员
+	 */
+	private void initUsers() {
+		List<SystemUser> users = systemUserDAO.findAll();
+		if (users == null || users.size() == 0) {
+			// 系统管理员
+			SystemUser user = new SystemUser();
+
+			user.setEmail(SysProperties.getInstance().getProperty(SystemPropertiesConstant.CODE_SUPER_ACCOUNTNAME));
+			user.setUsername(SysProperties.getInstance().getProperty(SystemPropertiesConstant.CODE_SUPER_ACCOUNTNAME));
+			user.setPassword(JavaMD5Hash.md5("LoveLee2019"));
+			user.setUserRole(EnumUserRole.ADMIN);
+			user.setCreateDate(new Date());
+			user.setIsAdminFlag(true);
+			this.systemUserDAO.save(user);
+
+			SystemRoleUser roleUser = new SystemRoleUser();
+			roleUser.setRoleId(CommonConstant.SYSTEM_ROLE.SUPER_USER);
+			roleUser.setUserId(user.getId());
+			this.systemRoleUserDAO.save(roleUser);
+
+			// for (int i = 0; i < 10; i++) {
+			// user = new SystemUser();
+			// user.setEmail("service" + i);
+			// user.setUsername("service" + i);
+			// user.setPassword(JavaMD5Hash.md5("LoveLee2018"));
+			// user.setCreateDate(new Date());
+			// user.setIsAdminFlag(true);
+			// this.systemUserDAO.save(user);
+			// roleUser = new SystemRoleUser();
+			// roleUser.setRoleId(CommonConstant.SYSTEM_ROLE.SUPER_USER);
+			// roleUser.setUserId(user.getId());
+			// this.systemRoleUserDAO.save(roleUser);
+			// }
+		}
+	}
+
+	/**
+	 * 新建用户
+	 */
+	public void newUsers() {
+			SystemUser user = new SystemUser();
+
+			SystemRoleUser roleUser = new SystemRoleUser();
+
+			 for (int i = 0; i < 1; i++) {
+			 user = new SystemUser();
+			 user.setEmail("service" + i);
+			 user.setUsername("service" + i);
+			 user.setPassword(JavaMD5Hash.md5("xue_Good"));
+			 user.setCreateDate(new Date());
+			 user.setIsAdminFlag(true);
+			 this.systemUserDAO.save(user);
+			 roleUser = new SystemRoleUser();
+			 roleUser.setRoleId(CommonConstant.SYSTEM_ROLE.SUPER_USER);
+			 roleUser.setUserId(user.getId());
+			 this.systemRoleUserDAO.save(roleUser);
+			 }
+
+	}
+	
+	/**
+	 * 
+	 */
+	private void initRoleAndRights() {
+		// Initialize role information
+		List<SystemRole> roles = systemRoleDAO.findAll();
+		if (roles == null || roles.size() == 0) {
+			SystemRole systemRole = new SystemRole(CommonConstant.SYSTEM_ROLE.SUPER_USER);
+			systemRole.setRoleName("系统管理员");
+			systemRole.setSystemMenuFlag(true);
+			this.systemRoleDAO.save(systemRole);
+
+			systemRole = new SystemRole(CommonConstant.SYSTEM_ROLE.MANGER_USER);
+			systemRole.setRoleName("管理用户");
+			systemRole.setSystemMenuFlag(true);
+			this.systemRoleDAO.save(systemRole);
+
+			systemRole = new SystemRole(CommonConstant.SYSTEM_ROLE.NORMAL_USER);
+			systemRole.setRoleName("普通用户");
+			systemRole.setSystemMenuFlag(true);
+			this.systemRoleDAO.save(systemRole);
+		}
+	}
+
+	/**
+	 * 
+	 */
+	public void destroy() {
+		log.info("Destroy");
+	}
+	
+	public static void main(String[] args) {
+		new InitializeDataService().newUsers();
+	}
+}

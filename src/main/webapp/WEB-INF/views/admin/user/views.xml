@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition extends="box" name="/admin/user/index">
+		<put-attribute name="body" value="/WEB-INF/views/admin/user/index.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/user/add">
+		<put-attribute name="body" value="/WEB-INF/views/admin/user/add.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/user/indexRole">
+		<put-attribute name="body" value="/WEB-INF/views/admin/user/indexRole.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/user/indexRoleMenu">
+		<put-attribute name="body" value="/WEB-INF/views/admin/user/indexRoleMenu.jsp" />
+	</definition>
+</tiles-definitions>

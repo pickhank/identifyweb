@@ -1,0 +1,73 @@
+body {
+	background: #FFF;
+}
+
+table {
+    width: 90%;
+    height: 210px;
+    margin: 0 auto;
+    border: 1px solid gainsboro;
+}
+
+.supermarkit {
+    text-align: center;
+    height: 50px;
+    line-height: 50px;
+    font-size: 20px;
+}
+
+.sydian {
+    height: 50px;
+    line-height: 50px;
+    /* font-size: 2vh; */
+    padding-top: 8px;
+    /* text-indent: 1em; */
+    padding-left: 8px;
+}
+
+.header {
+	background-color: #f59b42;
+	height: 100px;
+}
+
+.body {}
+
+.body-s {
+    height: 30px;
+    line-height: 30px;
+    /* font-size: 16px; */
+    background-color: #d4d4d4;
+    padding-top: 10;
+    /* text-indent: 1em; */
+    padding-left: 8px;
+}
+
+.body-s-s {
+    /* padding-top: 4px; */
+    margin-top: 4px;
+    height: 36px;
+    border-bottom: 1px solid gainsboro;
+}
+
+.body-x {
+     height: 30px;
+    line-height: 30px;
+    /* font-size: 14px; */
+    border-bottom: 1px solid gainsboro;
+    /* text-indent: 1em; */
+    padding-left: 8px;
+}
+
+.body-y {
+    height: 30px;
+    line-height: 30px;
+    /* font-size: 16px; */
+    background-color: #d4d4d4;
+    padding-right: 8px;
+}
+
+.body-y-y {
+padding-top: 4px;
+    height: 40px;
+    text-align: right;
+}

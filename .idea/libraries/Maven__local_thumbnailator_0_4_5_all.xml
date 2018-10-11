@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: local:thumbnailator:0.4.5-all">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/local/thumbnailator/0.4.5-all/thumbnailator-0.4.5-all.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/local/thumbnailator/0.4.5-all/thumbnailator-0.4.5-all-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/local/thumbnailator/0.4.5-all/thumbnailator-0.4.5-all-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

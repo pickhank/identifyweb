@@ -1,0 +1,105 @@
+package com.woodare.template.jpa.model;
+
+import com.woodare.core.base.AbstractBusiModel;
+import com.woodare.framework.annotation.EntityDescriptor;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+
+/**
+ * ClassName: Charge
+ *
+ */
+@Entity
+@EntityDescriptor(name = "充值明细", category = "content")
+public class ChargeDetail extends AbstractBusiModel {
+	private static final long serialVersionUID = -920203691251156286L;
+
+	/** 录入人*/
+    @Column(length = 20, nullable = false)
+    private String createName;
+
+    /** 商户号 **/
+    @Column(length = 20, nullable = false)
+    private String mchNo;
+
+    /** 商户名 **/
+    @Column(length = 100)
+    private String mchName;
+
+    /** 充值处理状态， 0-待审核、1-审核通过、2-审核拒绝 */
+    @Column(nullable=false,columnDefinition="INT default 0")
+    private Integer status;
+
+    /** 审核时间*/
+    @Column(length = 20)
+    private String auditDate;
+
+    /** 充值金额, 单位：分 */
+    @Column
+    private Long rearMoney;
+
+    /** 备注*/
+    @Column(length = 100)
+    private String remark;
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public String getCreateName() {
+        return createName;
+    }
+
+    public void setCreateName(String createName) {
+        this.createName = createName;
+    }
+
+    public String getMchNo() {
+        return mchNo;
+    }
+
+    public void setMchNo(String mchNo) {
+        this.mchNo = mchNo;
+    }
+
+    public String getMchName() {
+        return mchName;
+    }
+
+    public void setMchName(String mchName) {
+        this.mchName = mchName;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getAuditDate() {
+        return auditDate;
+    }
+
+    public void setAuditDate(String auditDate) {
+        this.auditDate = auditDate;
+    }
+
+    public Long getRearMoney() {
+        return rearMoney;
+    }
+
+    public void setRearMoney(Long rearMoney) {
+        this.rearMoney = rearMoney;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+}

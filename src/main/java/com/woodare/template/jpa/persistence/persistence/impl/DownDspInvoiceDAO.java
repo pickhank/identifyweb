@@ -1,0 +1,309 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.template.jpa.persistence.persistence.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.persistence.service.impl.AbstractPagedDAO;
+import com.woodare.template.jpa.model.DownDspInvoice;
+import com.woodare.template.jpa.persistence.data.downdspinvoice.DownDspInvoiceData;
+import com.woodare.template.jpa.persistence.data.downdspinvoice.DownDspInvoiceSumData;
+import com.woodare.template.jpa.persistence.data.downdspinvoice.DownDspInvoiceUpSumData;
+import com.woodare.template.jpa.persistence.data.downdspinvoice.SearchDownDspInvoiceData;
+import com.woodare.template.jpa.persistence.persistence.IDownDspInvoiceDAO;
+
+/**
+ * ClassName: DownDspInvoiceDAO
+ * 
+ * @description
+ * @author woo_maven_auto_generate
+ * @Date 2018/09/13
+ */
+@Service
+public class DownDspInvoiceDAO extends AbstractPagedDAO<DownDspInvoice> implements IDownDspInvoiceDAO {
+
+	@Override
+	protected Class<DownDspInvoice> getDomainClass() {
+		return DownDspInvoice.class;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public IPagedList<DownDspInvoice> searchItems(SearchDownDspInvoiceData searchData) {
+
+		StringBuffer sql = new StringBuffer("from DownDspInvoice a");
+
+		List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+
+		// Add filter conditions
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			conditions.add(new TypeCondition("id", "a.id = :id", searchData.getId()));
+		}
+		if (searchData.getIds() != null && searchData.getIds().size() > 0) {
+			conditions.add(new TypeCondition("ids", "a.id in (:ids)", searchData.getIds()));
+		}
+		// change the key
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			conditions.add(new TypeCondition("keywords", "(a.id like :keywords)", "%" + searchData.getKeywords() + "%"));
+		}
+		// TODO: add more conditions
+
+		// Append conditions
+		if (conditions != null && conditions.size() > 0) {
+			sql.append(" where ").append(this.joinConditions(conditions, " and "));
+		}
+
+		if (StringUtils.isEmpty(searchData.getOrderString())) {
+			searchData.setOrderString("createDate desc");
+		}
+
+		// Create query statements
+		TypedQuery<DownDspInvoice> query = this.getEntityManager().createQuery(sql.toString() + " order by a." + searchData.getOrderString(), DownDspInvoice.class);
+		TypedQuery<Long> totalQuery = this.getEntityManager().createQuery("select count(a.id) " + sql.toString(), Long.class);
+
+		// Append conditions' variables
+		this.addParameters(query, conditions);
+		this.addParameters(totalQuery, conditions);
+
+		// Send back returns
+		return this.getPagedList(totalQuery, query, searchData);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public DownDspInvoice findById(String id) {
+		DownDspInvoice item = this.findOne(id);
+		if (item == null) {
+			item = null;
+		}
+		return item;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DownDspInvoice findByTradeNoAndMchNo(String tradeNo, String mchNo) {
+		TypedQuery<DownDspInvoice> query = this.getEntityManager().createQuery("from DownDspInvoice a where a.tradeNo = :tradeNo and a.mchNo = :mchNo ", DownDspInvoice.class);
+		query.setMaxResults(1);
+		query.setParameter("tradeNo", tradeNo);
+		query.setParameter("mchNo", mchNo);
+		List<DownDspInvoice> models = query.getResultList();
+		return models != null && models.size() > 0 ? models.get(0) : null;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DownDspInvoice findByTransNo(String transNo) {
+		TypedQuery<DownDspInvoice> query = this.getEntityManager().createQuery("from DownDspInvoice a where a.transNo = :transNo ", DownDspInvoice.class);
+		query.setMaxResults(1);
+		query.setParameter("transNo", transNo);
+		List<DownDspInvoice> models = query.getResultList();
+		return models != null && models.size() > 0 ? models.get(0) : null;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DownDspInvoice> findNeedCheckByStatusChgDate(Date start, Date end) {
+
+		String sql = "from DownDspInvoice a ";
+		sql += "where a.status = :status ";
+		sql += "and a.createDate >= :startDate ";
+		sql += "and a.createDate < :endDate";
+
+		TypedQuery<DownDspInvoice> query = this.getEntityManager().createQuery(sql, DownDspInvoice.class);
+
+		// 明确为支付中的交易数据
+		query.setParameter("status", "01");
+		query.setParameter("startDate", start);
+		query.setParameter("endDate", end);
+
+		List<DownDspInvoice> models = query.getResultList();
+		return models;
+	}
+
+	/**
+	 * @param data
+	 * @param fields
+	 */
+	private List<TypeCondition> parseNotNullFields(DownDspInvoiceData data, List<TypeCondition> fields, String columnSuffix) {
+		if (fields == null) {
+			fields = new ArrayList<TypeCondition>();
+		}
+		if (data.getStatus() != null) {
+			fields.add(new TypeCondition("status" + columnSuffix, "a.status =:status" + columnSuffix, data.getStatus()));
+		}
+		if (StringUtils.isNotEmpty(data.getStatusDesc())) {
+			fields.add(new TypeCondition("statusDesc" + columnSuffix, "a.statusDesc =:statusDesc" + columnSuffix, data.getStatusDesc()));
+		}
+		if (data.getStatusChgDate() != null) {
+			fields.add(new TypeCondition("statusChgDate" + columnSuffix, "a.statusChgDate =:statusChgDate" + columnSuffix, data.getStatusChgDate()));
+		}
+		if (data.getSentUp() != null) {
+			fields.add(new TypeCondition("sentUp" + columnSuffix, "a.sentUp =:sentUp" + columnSuffix, data.getSentUp()));
+		}
+		if (StringUtils.isNotEmpty(data.getUpTransNo())) {
+			fields.add(new TypeCondition("upTransNo" + columnSuffix, "a.upTransNo =:upTransNo" + columnSuffix, data.getUpTransNo()));
+		}
+		if (StringUtils.isNotEmpty(data.getVerifyStatus())) {
+			fields.add(new TypeCondition("verifyStatus" + columnSuffix, "a.verifyStatus =:verifyStatus" + columnSuffix, data.getVerifyStatus()));
+		}
+		if (StringUtils.isNotEmpty(data.getVerifyStatusDesc())) {
+			fields.add(new TypeCondition("verifyStatusDesc" + columnSuffix, "a.verifyStatusDesc =:verifyStatusDesc" + columnSuffix, data.getVerifyStatusDesc()));
+		}
+		return fields;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public int updateSelectiveByCons(DownDspInvoiceData values, DownDspInvoiceData cons) {
+		List<TypeCondition> fields = parseNotNullFields(values, new ArrayList<TypeCondition>(), "");
+		List<TypeCondition> wheres = parseNotNullFields(cons, new ArrayList<TypeCondition>(), "Condition");
+
+		StringBuffer sql = new StringBuffer("update DownDspInvoice a");
+		sql.append(" set ");
+		sql.append(this.joinConditions(fields, ", "));
+		sql.append(" where ");
+		sql.append(this.joinConditions(wheres, " and "));
+
+		fields.addAll(wheres);
+
+		return executeUpdate(sql.toString(), fields);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DownDspInvoiceSumData> sumInvoice(SearchDownDspInvoiceData searchData) {
+
+		StringBuffer sb = new StringBuffer();
+		sb.append(" select");
+		sb.append("  m.*,");
+		sb.append("  n.name");
+		sb.append(" from (");
+		sb.append("  select");
+		sb.append("    a.mch_no,");
+		sb.append("    count(a.id) total_count,");
+		sb.append("    sum(case when a.status = '00' then 1 else 0 end) count,");
+		sb.append("    sum(case when a.status = '00' then a.mch_pay_fee else 0 end) mchFeeAmt,");
+		sb.append("    sum(case when a.status = '00' then a.channel_pay_fee else 0 end) channelFeeAmt,");
+		sb.append("    sum(case when a.status = '00' then a.agent_profit else 0 end) agentProfitAmt,");
+		sb.append("    sum(case when a.status = '00' then a.profit else 0 end) profitAmt,");
+		sb.append("    sum(case when a.status = '00' then a.xtra_profit else 0 end) xtraProfitAmt");
+		sb.append("  from down_dsp_invoice a");
+		sb.append("  where 1=1 ");
+		if (StringUtils.isNotEmpty(searchData.getMchNo())) {
+			sb.append("   and a.mch_no = :mchNo");
+		}
+		if (searchData.getStartDate() != null) {
+			sb.append("   and a.create_date >= :startDate");
+		}
+		if (searchData.getEndDate() != null) {
+			sb.append("   and a.create_date <= :endDate");
+		}
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			sb.append("   and (a.mch_name like :keywords or a.mch_no like :keywords)");
+		}
+		sb.append("  group by a.mch_no order by a.mch_no");
+		sb.append(" ) m");
+		sb.append(" left join down_merchant n on m.mch_no = n.mch_no");
+		// TypedQuery<InvoiceSumData>
+		Query query = this.getEntityManager().createNativeQuery(sb.toString());
+		if (searchData.getStartDate() != null) {
+			query.setParameter("startDate", searchData.getStartDate());
+		}
+		if (searchData.getEndDate() != null) {
+			query.setParameter("endDate", searchData.getEndDate());
+		}
+		if (StringUtils.isNotEmpty(searchData.getMchNo())) {
+			query.setParameter("mchNo", searchData.getMchNo());
+		}
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			query.setParameter("keywords", "%" + searchData.getKeywords() + "%");
+		}
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> items = query.getResultList();
+		List<DownDspInvoiceSumData> results = new ArrayList<DownDspInvoiceSumData>();
+		if (items != null) {
+			for (Object[] item : items) {
+				results.add(new DownDspInvoiceSumData(item));
+			}
+		}
+		return results;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DownDspInvoiceUpSumData> upSumInvoice(SearchDownDspInvoiceData searchData) {
+		StringBuffer sb = new StringBuffer();
+
+		sb.append("select");
+		sb.append("    a.channel, a.channel_acc_no, a.channel_acc_name, ");
+		sb.append("    count(a.id) total_count,");
+		sb.append("    sum(case when a.status = '00' then 1 else 0 end) count,");
+		sb.append("    sum(case when a.status = '00' then a.mch_pay_fee else 0 end) mchFeeAmt,");
+		sb.append("    sum(case when a.status = '00' then a.channel_pay_fee else 0 end) channelFeeAmt,");
+		sb.append("    sum(case when a.status = '00' then a.agent_profit else 0 end) agentProfitAmt,");
+		sb.append("    sum(case when a.status = '00' then a.profit else 0 end) profitAmt,");
+		sb.append("    sum(case when a.status = '00' then a.xtra_profit else 0 end) xtraProfitAmt");
+		sb.append("  from down_dsp_invoice a");
+		sb.append("  where 1=1 ");
+		if (searchData.getChannel() != null) {
+			sb.append("   and a.channel = :channel");
+		}
+		if (searchData.getStartDate() != null) {
+			sb.append("   and a.create_date >= :startDate");
+		}
+		if (searchData.getEndDate() != null) {
+			sb.append("   and a.create_date <= :endDate");
+		}
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			sb.append("   and (a.channel like :keywords or a.channel_acc_name like :keywords)");
+		}
+
+		sb.append("  group by a.channel, a.channel_acc_no, a.channel_acc_name order by a.channel, a.channel_acc_no, a.channel_acc_name ");
+		// TypedQuery<InvoiceSumData>
+		Query query = this.getEntityManager().createNativeQuery(sb.toString());
+		if (searchData.getStartDate() != null) {
+			query.setParameter("startDate", searchData.getStartDate());
+		}
+		if (searchData.getEndDate() != null) {
+			query.setParameter("endDate", searchData.getEndDate());
+		}
+		if (searchData.getChannel() != null) {
+			query.setParameter("channel", searchData.getChannel().toString());
+		}
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			query.setParameter("keywords", "%" + searchData.getKeywords() + "%");
+		}
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> items = query.getResultList();
+		List<DownDspInvoiceUpSumData> results = new ArrayList<DownDspInvoiceUpSumData>();
+		if (items != null) {
+			for (Object[] item : items) {
+				results.add(new DownDspInvoiceUpSumData(item));
+			}
+		}
+		return results;
+	}
+}

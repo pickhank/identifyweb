@@ -1,0 +1,467 @@
+/******************************************************************************
+ *
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *
+ *****************************************************************************/
+package com.woodare.template.web.controller;
+
+import java.util.*;
+
+import com.woodare.core.util.SDFFactory;
+import com.woodare.template.helper.cache.DownMerchantProducts;
+import com.woodare.template.jpa.model.DownMerchant;
+import com.woodare.template.jpa.model.data.EnumDateCate;
+import com.woodare.template.jpa.model.data.EnumDownUserStatus;
+import com.woodare.template.jpa.persistence.data.downmerchantproduct.DownMerchantProductData;
+import com.woodare.template.jpa.persistence.persistence.IDownMerchantDAO;
+import com.woodare.template.web.viewdata.downdspinvoice.SearchDownDspInvoiceViewData;
+import com.woodare.template.web.viewdata.downmerchant.DownMerchantViewData;
+import com.woodare.template.web.viewdata.downmerchant.SearchDownMerchantViewData;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.woodare.core.base.BaseController;
+import com.woodare.core.exception.ControllerException;
+import com.woodare.core.web.common.viewdata.AjaxResponseData;
+import com.woodare.core.web.common.viewdata.ListResponseData;
+import com.woodare.framework.data.EResponseState;
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.utils.SaftyBeanUtils;
+import com.woodare.framework.utils.StringUtils;
+import com.woodare.template.jpa.model.ChargeDetail;
+import com.woodare.template.jpa.persistence.persistence.IChargeDetailDAO;
+import com.woodare.template.web.viewdata.chargedetail.ChargeDetailViewData;
+import com.woodare.template.web.viewdata.chargedetail.SearchChargeDetailViewData;
+
+import javax.servlet.http.HttpServletResponse;
+
+
+/**
+ * ClassName: ChargeDetailController
+ *
+ * @description
+ * @author to_be_replaced_by_owner
+ * @Date 2015/11/15
+ */
+@Controller
+@RequestMapping("/admin/chargeDetail")
+public class AdminChargeDetailController extends BaseController {
+	private static Logger log = Logger.getLogger(AdminChargeDetailController.class);
+
+	@Autowired
+	private IChargeDetailDAO  chargeDetailDAO;
+
+
+	@Autowired
+	private IDownMerchantDAO downMerchantDAO;
+
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping("/index")
+	public ModelAndView index(SearchChargeDetailViewData searchData,HttpServletResponse response) throws ControllerException {
+		log.debug("================>"+showIndex("/admin/chargeDetail/index", searchData));
+		return showIndex(getTemplate("/admin/chargeDetail/index"),searchData);
+	}
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping("/export")
+	public ModelAndView export(SearchChargeDetailViewData searchData,HttpServletResponse response) throws ControllerException {
+			List<ChargeDetail> items = chargeDetailDAO.searchItems(searchData);
+			String responName = "merchant-" + SDFFactory.DATETIME.format(new Date()) + ".csv";
+			return this.exportToResponse(response, responName, formatString(items));
+	}
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/add", method = RequestMethod.GET)
+	public ModelAndView add(ChargeDetailViewData searchData, SearchDownMerchantViewData searchDataTwo) throws ControllerException {
+		ModelAndView mav = new ModelAndView("/admin/chargeDetail/add");
+
+
+		ChargeDetailViewData item = null;
+
+		IPagedList<DownMerchant> items = downMerchantDAO.searchDownMerchants(searchDataTwo);
+
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			ChargeDetail model = chargeDetailDAO.findOne(searchData.getId());
+			item = convertDetails(model);
+		}
+		else {
+			item = new ChargeDetailViewData();
+		}
+		mav.addObject("search",searchDataTwo);
+		mav.addObject("res", convertToListTwo(items));
+		return mav;
+	}
+
+	private ListResponseData<DownMerchantViewData> convertToListTwo(IPagedList<DownMerchant> items) {
+		ListResponseData<DownMerchantViewData> response = new ListResponseData<DownMerchantViewData>();
+		if (items != null) {
+			for (DownMerchant itemtwo : items) {
+				response.addItem(convertTwo(itemtwo));
+			}
+		}
+		response.setIndex(items.getPageIndex());
+		response.setPages(items.getMaxPages());
+		response.setSize(items.getPageSize());
+		response.setTotal(items.getTotalSize());
+		return response;
+	}
+
+	private DownMerchantViewData convertTwo(DownMerchant item) {
+		DownMerchantViewData viewData = SaftyBeanUtils.cloneTo(item, DownMerchantViewData.class);
+
+		if (item != null && StringUtils.isNotEmpty(item.getMchNo())) {
+			List<DownMerchantProductData> products = DownMerchantProducts.getByMchNo(item.getMchNo());
+			String openProducts = "-";
+			if (products != null && products.size() > 0) {
+				openProducts = "";
+				for (DownMerchantProductData product : products) {
+					openProducts += String.format("<span class='lbl-summary'>%s</span> = %s", product.getDspMode().getDesc(), product.getAddFeeAmt() + "元") + "<br>";
+				}
+			}
+			viewData.setProductTypeSummary(openProducts);
+		}
+
+		return viewData;
+	}
+
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/add", method = RequestMethod.POST)
+	public ModelAndView addPost(ChargeDetailViewData item) {
+		ChargeDetail model = null;
+		/** 查询出所有记录*/
+		List<ChargeDetail> ch = chargeDetailDAO.findAll();
+
+		item.setAuditDate(item.getAuditDate().replaceAll("/",""));
+
+		String error = validData(item);
+		if (StringUtils.isNotEmpty(error)) {
+			return alertFailed("/admin/chargeDetail/add", item, error);
+		}
+
+		if (StringUtils.isNotEmpty(item.getId())) {
+			model = chargeDetailDAO.findOne(item.getId());
+		}
+		else {
+			model = new ChargeDetail();
+		}
+		SaftyBeanUtils.copyProperties(item, model, new String[] { "id", "deleteStatus", "createDate", "updateDate" });
+
+		if (StringUtils.isNotEmpty(item.getId())) {
+			this.chargeDetailDAO.update(model);
+		}
+		//新数据保存
+		model.setRearMoney(10l);
+		this.chargeDetailDAO.save(model);
+		return alertSuccess("/admin/chargeDetail/add", convertDetails(model));
+	}
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/info", method = RequestMethod.GET)
+	public ModelAndView info(ChargeDetailViewData searchData) throws ControllerException {
+		ModelAndView mav = new ModelAndView("/admin/chargeDetail/info");
+		ChargeDetailViewData item = null;
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			ChargeDetail model = chargeDetailDAO.findOne(searchData.getId());
+			item = convertDetails(model);
+		}
+		else {
+			item = new ChargeDetailViewData();
+		}
+		mav.addObject("item", item);
+		return mav;
+	}
+
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/info", method = RequestMethod.POST)
+	public ModelAndView infoPost(ChargeDetailViewData item) {
+		ChargeDetail model = null;
+
+		String error = validData(item);
+		if (StringUtils.isNotEmpty(error)) {
+			return alertFailed("/admin/chargeDetail/info", item, error);
+		}
+
+		if (StringUtils.isNotEmpty(item.getId())) {
+			model = chargeDetailDAO.findOne(item.getId());
+		}
+		else {
+			model = new ChargeDetail();
+		}
+		SaftyBeanUtils.copyProperties(item, model, new String[] { "id", "deleteStatus", "createDate", "updateDate" });
+		if (StringUtils.isNotEmpty(item.getId())) {
+			this.chargeDetailDAO.update(model);
+		}
+		else {
+			this.chargeDetailDAO.save(model);
+		}
+		return alertSuccess("/admin/chargeDetail/info", convertDetails(model));
+	}
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/modify", method = RequestMethod.GET)
+	public ModelAndView modify(ChargeDetailViewData searchData) throws ControllerException {
+		ModelAndView mav = new ModelAndView("/admin/chargeDetail/modify");
+		ChargeDetailViewData item = null;
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			ChargeDetail model = chargeDetailDAO.findOne(searchData.getId());
+			item = convertDetails(model);
+		}
+		else {
+			item = new ChargeDetailViewData();
+		}
+		mav.addObject("item", item);
+		return mav;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/modify", method = RequestMethod.POST)
+	public ModelAndView modifyPost(ChargeDetailViewData item) {
+		ChargeDetail model = null;
+
+		String error = validData(item);
+		if (StringUtils.isNotEmpty(error)) {
+			return alertFailed("/admin/chargeDetail/modify", item, error);
+		}
+
+		if (StringUtils.isNotEmpty(item.getId())) {
+			model = chargeDetailDAO.findOne(item.getId());
+		}
+		else {
+			model = new ChargeDetail();
+		}
+		SaftyBeanUtils.copyProperties(item, model, new String[] { "id", "deleteStatus", "createDate", "updateDate" });
+		if (StringUtils.isNotEmpty(item.getId())) {
+			this.chargeDetailDAO.update(model);
+		}
+		else {
+			this.chargeDetailDAO.save(model);
+		}
+		return alertSuccess("/admin/chargeDetail/modify", convertDetails(model));
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/delete/{itemId}", method = RequestMethod.POST)
+	@ResponseBody
+	public AjaxResponseData<Boolean> delete(@PathVariable String itemId) {
+		AjaxResponseData<Boolean> ret = new AjaxResponseData<Boolean>(false);
+		ret.setState(EResponseState.CustomMsg);
+		String message = "";
+		try {
+			if (StringUtils.isNotEmpty(itemId)) {
+				ChargeDetail model = chargeDetailDAO.findOne(itemId);
+				if (model == null) {
+					message = "数据已被删除，请重新刷新画面！";
+				}
+				else {
+					chargeDetailDAO.delete(model);
+					message = "删除成功！";
+					ret.setState(EResponseState.Successful);
+				}
+			}
+			else {
+				message = "数据已被删除，请重新刷新画面！";
+			}
+		} catch (Exception e) {
+			log.error(e, e);
+			message = "删除失败！ " + e.getMessage();
+		}
+		ret.setMessage(message);
+		return ret;
+	}
+
+	private ModelAndView showIndex(String jsp, SearchChargeDetailViewData searchData) {
+		ModelAndView mav = new ModelAndView(jsp);
+
+		IPagedList<ChargeDetail> items = chargeDetailDAO.searchItems(searchData);
+
+//		if (searchData.getDoExportFlag() != null && searchData.getDoExportFlag()) {
+//			String responName = "merchant-" + SDFFactory.DATETIME.format(new Date()) + ".csv";
+//			return this.exportToResponse(response, responName, formatString(items));
+//		}
+		mav.addObject("search", searchData);
+		mav.addObject("res", convertToList(items));
+		log.debug("=======================>"+mav);
+		return mav;
+	}
+
+
+	/**
+	 * @param items
+	 * @return
+	 */
+	private String formatString(List<ChargeDetail> items) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("录入人,");
+		sb.append("商户号,");
+		sb.append("商户名,");
+		sb.append("充值处理状态,");
+		sb.append("审核时间,");
+		sb.append("充值后金额,");
+		sb.append("备注,");
+		sb.append("\n");
+		if (items != null) {
+			for (ChargeDetail item : items) {
+				sb.append(formatValue(item.getCreateName()));
+				sb.append(formatValue(item.getMchNo(), true));
+				sb.append(formatValue(item.getMchName()));
+				if (item.getStatus() == 0) {
+					sb.append(formatValue("待审核"));
+				}
+				else if (item.getStatus() == 1) {
+					sb.append(formatValue("审核通过"));
+				}
+				else if (item.getStatus() == 2) {
+					sb.append(formatValue("审核拒绝"));
+				}
+				sb.append(formatValue(item.getAuditDate()));
+				sb.append(formatValue(item.getRearMoney()));
+				sb.append(formatValue(item.getRemark()));
+
+				sb.append("\n");
+			}
+		}
+		return sb.toString();
+	}
+
+
+
+	/**
+	 * @param searchData
+	 */
+	private void formatSearchData(SearchDownDspInvoiceViewData searchData) {
+		if (searchData.getDoExportFlag() != null && searchData.getDoExportFlag()) {
+			searchData.setPageSize(Integer.MAX_VALUE);
+		}
+
+		if (searchData.getDateCate() == null) {
+			searchData.setDateCate(EnumDateCate.CUSTOM);
+		}
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+		c.add(Calendar.DAY_OF_MONTH, 1);
+		c.add(Calendar.MILLISECOND, -1);
+		switch (searchData.getDateCate()) {
+			case TODAY:
+				searchData.setEndDate(c.getTime());
+				c.add(Calendar.DAY_OF_MONTH, -1);
+				c.add(Calendar.MILLISECOND, 1);
+				searchData.setStartDate(c.getTime());
+				break;
+			case YESTERDAY:
+				c.add(Calendar.DAY_OF_MONTH, -1);
+				searchData.setEndDate(c.getTime());
+				c.add(Calendar.DAY_OF_MONTH, -1);
+				c.add(Calendar.MILLISECOND, 1);
+				searchData.setStartDate(c.getTime());
+				break;
+			case LAST_7_DAYS:
+				searchData.setEndDate(c.getTime());
+				c.add(Calendar.DAY_OF_MONTH, -7);
+				c.add(Calendar.MILLISECOND, 1);
+				searchData.setStartDate(c.getTime());
+				break;
+			case LAST_30_DAYS:
+				searchData.setEndDate(c.getTime());
+				c.add(Calendar.DAY_OF_MONTH, -30);
+				c.add(Calendar.MILLISECOND, 1);
+				searchData.setStartDate(c.getTime());
+				break;
+			default:
+				if (searchData.getEndDate() == null) {
+					searchData.setEndDate(c.getTime());
+				}
+				else {
+					Calendar c1 = Calendar.getInstance();
+					c1.setTime(searchData.getEndDate());
+					c1.set(Calendar.HOUR_OF_DAY, 0);
+					c1.set(Calendar.MINUTE, 0);
+					c1.set(Calendar.SECOND, 0);
+					c1.set(Calendar.MILLISECOND, 0);
+					c1.add(Calendar.DAY_OF_MONTH, 1);
+					c1.add(Calendar.MILLISECOND, -1);
+					searchData.setEndDate(c1.getTime());
+				}
+				if (searchData.getStartDate() == null) {
+					c.add(Calendar.DAY_OF_MONTH, -1);
+					c.add(Calendar.MILLISECOND, 1);
+					searchData.setStartDate(c.getTime());
+				}
+				else {
+					Calendar c1 = Calendar.getInstance();
+					c1.setTime(searchData.getStartDate());
+					c1.set(Calendar.HOUR_OF_DAY, 0);
+					c1.set(Calendar.MINUTE, 0);
+					c1.set(Calendar.SECOND, 0);
+					c1.set(Calendar.MILLISECOND, 0);
+					searchData.setStartDate(c1.getTime());
+				}
+
+				// 如果使用精确条件检索，则忽略掉时间戳
+				if (StringUtils.isEmpty(searchData.getTradeNo()) && StringUtils.isEmpty(searchData.getTransNo())) {
+					if (SDFFactory.DATE.format(searchData.getEndDate()).equals(SDFFactory.DATE.format(searchData.getStartDate()))) {
+						String date = SDFFactory.DATE.format(searchData.getEndDate());
+						try {
+							if (StringUtils.isNotEmpty(searchData.getStartTime())) {
+								searchData.setStartDate(SDFFactory.DATETIME.parse(date + searchData.getStartTime().replaceAll(":", "")));
+							}
+							if (StringUtils.isNotEmpty(searchData.getEndTime())) {
+								searchData.setEndDate(SDFFactory.DATETIME.parse(date + searchData.getEndTime().replaceAll(":", "")));
+							}
+						} catch (Exception e) {
+						}
+					}
+				}
+				break;
+		}
+	}
+
+	private ListResponseData<ChargeDetailViewData> convertToList(IPagedList<ChargeDetail> items) {
+		ListResponseData<ChargeDetailViewData> response = new ListResponseData<ChargeDetailViewData>();
+		if (items != null) {
+			for (ChargeDetail item : items) {
+				response.addItem(convert(item));
+			}
+		}
+		response.setIndex(items.getPageIndex());
+		response.setPages(items.getMaxPages());
+		response.setSize(items.getPageSize());
+		response.setTotal(items.getTotalSize());
+		return response;
+	}
+
+	private String validData(ChargeDetailViewData item) {
+		String error = "";
+		return error;
+	}
+
+	private ChargeDetailViewData convert(ChargeDetail model) {
+		ChargeDetailViewData item = SaftyBeanUtils.cloneTo(model, ChargeDetailViewData.class, new String[] { "deleteStatus" });
+		return item;
+	}
+
+	private ChargeDetailViewData convertDetails(ChargeDetail model) {
+		ChargeDetailViewData item = convert(model);
+		return item;
+	}
+}

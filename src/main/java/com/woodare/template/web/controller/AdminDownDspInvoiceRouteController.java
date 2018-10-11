@@ -1,0 +1,291 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.template.web.controller;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSONObject;
+import com.woodare.core.base.BaseController;
+import com.woodare.core.exception.ControllerException;
+import com.woodare.core.util.SDFFactory;
+import com.woodare.core.web.common.viewdata.AjaxResponseData;
+import com.woodare.core.web.common.viewdata.ListResponseData;
+import com.woodare.framework.data.EResponseState;
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.utils.SaftyBeanUtils;
+import com.woodare.framework.utils.StringUtils;
+import com.woodare.template.busi.service.CacheDataChangeService;
+import com.woodare.template.helper.cache.DownMerchants;
+import com.woodare.template.helper.cache.PasswayDspMerchants;
+import com.woodare.template.jpa.model.DownDspInvoiceRoute;
+import com.woodare.template.jpa.persistence.data.downdspinvoiceroute.DownDspInvoiceRouteData;
+import com.woodare.template.jpa.persistence.data.downmerchant.DownMerchantData;
+import com.woodare.template.jpa.persistence.data.passwaydspmerchant.PasswayDspMerchantData;
+import com.woodare.template.jpa.persistence.persistence.IDownDspInvoiceRouteDAO;
+import com.woodare.template.web.viewdata.downdspinvoiceroute.DownDspInvoiceRouteViewData;
+import com.woodare.template.web.viewdata.downdspinvoiceroute.SearchDownDspInvoiceRouteViewData;
+import com.woodare.template.web.viewdata.passwaydspmerchant.PasswayDspMerchantViewData;
+
+/**
+ * ClassName: AdminDownDspInvoiceRouteController
+ * 
+ * @description
+ * @author to_be_replaced_by_owner
+ * @Date 2018/09/15
+ */
+@Controller
+@RequestMapping("/admin/downDspInvoiceRoute")
+public class 	AdminDownDspInvoiceRouteController extends BaseController {
+	private static Logger log = Logger.getLogger(AdminDownDspInvoiceRouteController.class);
+
+	@Autowired
+	private IDownDspInvoiceRouteDAO downDspInvoiceRouteDAO;
+
+	@Autowired
+	private CacheDataChangeService cacheDataChangeService;
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/index")
+	public ModelAndView index(SearchDownDspInvoiceRouteViewData searchData) throws ControllerException {
+		return showIndex(getTemplate("/admin/downDspInvoiceRoute/index"), searchData);
+	}
+
+	/**
+	 * @param data
+	 * @return
+	 * @throws ControllerException
+	 */
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/add", method = RequestMethod.GET)
+	public ModelAndView add(DownDspInvoiceRouteViewData data) throws ControllerException {
+		ModelAndView mav = new ModelAndView(getTemplate("/admin/downDspInvoiceRoute/add"));
+		/* 商户No. */
+		DownDspInvoiceRoute item = null;
+		if (StringUtils.isNotEmpty(data.getId())) {
+			item = downDspInvoiceRouteDAO.findOne(data.getId());
+		}
+
+		DownDspInvoiceRouteViewData viewData = convertDetails(item);
+		if (viewData == null) {
+			viewData = new DownDspInvoiceRouteViewData();
+			viewData.setPriority(50);
+		}
+
+		// /* 开始日期 */
+		if (StringUtils.isEmpty(viewData.getStartDate())) {
+			viewData.setStartDate(SDFFactory.DATE.format(new Date()));
+		}
+		// /* 结束日期 */
+		if (StringUtils.isEmpty(viewData.getEndDate())) {
+			viewData.setEndDate(SDFFactory.DATE.format(SDFFactory.getDateWithDiff(new Date(), Calendar.YEAR, 1)));
+		}
+		// /* 开始时间 */
+		if (StringUtils.isEmpty(viewData.getStartTime())) {
+			viewData.setStartTime("000000");
+		}
+		// /* 开始时间 */
+		// @Column(length = 6)
+		// private String endTime;
+		if (StringUtils.isEmpty(viewData.getEndTime())) {
+			viewData.setEndTime("000000");
+		}
+		mav.addObject("item", viewData);
+		if (item != null && item.getChannel() != null) {
+			mav.addObject("routeMerchants", PasswayDspMerchants.getByChannel(item.getChannel()));
+		}
+		return mav;
+	}
+
+	@RequestMapping(value = "/getRouteMerchant", method = RequestMethod.POST)
+	@ResponseBody
+	public AjaxResponseData<List<PasswayDspMerchantViewData>> getRouteMerchant(DownDspInvoiceRouteViewData data) {
+		AjaxResponseData<List<PasswayDspMerchantViewData>> ret = new AjaxResponseData<List<PasswayDspMerchantViewData>>();
+		ret.setState(EResponseState.Successful);
+		ret.setPayload(PasswayDspMerchants.getByChannel(data.getChannel()));
+		return ret;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/add", method = RequestMethod.POST)
+	public ModelAndView addP(DownDspInvoiceRouteViewData data) throws ControllerException {
+		String error = validError(data);
+		if (StringUtils.isEmpty(error)) {
+			DownDspInvoiceRoute item = null;
+			if (StringUtils.isNotEmpty(data.getId())) {
+				item = downDspInvoiceRouteDAO.findOne(data.getId());
+			}
+			boolean update = true;
+			if (item == null) {
+				item = new DownDspInvoiceRoute();
+				update = false;
+			}
+
+			SaftyBeanUtils.copyProperties(data, item, new String[] { "id", "createDate", "updateDate", "deleteStatus" });
+
+			if (update) {
+				downDspInvoiceRouteDAO.update(item);
+			}
+			else {
+				downDspInvoiceRouteDAO.save(item);
+			}
+			log.info("ChangeDownDspInvoiceRoute[" + this.getUserId() + "]" + JSONObject.toJSONString(data));
+
+			cacheDataChangeService.notifyOthers(DownDspInvoiceRouteData.class);
+
+			return alertSuccess(getTemplate("/admin/downDspInvoiceRoute/add"), convertDetails(item));
+		}
+		else {
+			return alertFailed(getTemplate("/admin/downDspInvoiceRoute/add"), data, error);
+		}
+	}
+
+	private ModelAndView showIndex(String jsp, SearchDownDspInvoiceRouteViewData searchData) {
+		ModelAndView mav = new ModelAndView(jsp);
+		IPagedList<DownDspInvoiceRoute> items = downDspInvoiceRouteDAO.searchItems(searchData);
+		mav.addObject("search", searchData);
+		mav.addObject("res", convertToList(items));
+		return mav;
+	}
+
+	private ListResponseData<DownDspInvoiceRouteViewData> convertToList(IPagedList<DownDspInvoiceRoute> items) {
+		ListResponseData<DownDspInvoiceRouteViewData> response = new ListResponseData<DownDspInvoiceRouteViewData>();
+		if (items != null) {
+			for (DownDspInvoiceRoute item : items) {
+				response.addItem(convert(item));
+			}
+		}
+		response.setIndex(items.getPageIndex());
+		response.setPages(items.getMaxPages());
+		response.setSize(items.getPageSize());
+		response.setTotal(items.getTotalSize());
+		return response;
+	}
+
+	private DownDspInvoiceRouteViewData convert(DownDspInvoiceRoute item) {
+		DownDspInvoiceRouteViewData viewData = SaftyBeanUtils.cloneTo(item, DownDspInvoiceRouteViewData.class);
+
+		if (viewData != null && StringUtils.isNotEmpty(viewData.getMchNo())) {
+			DownMerchantData merc = DownMerchants.getByCode(viewData.getMchNo());
+			if (merc != null) {
+				viewData.setMchName(merc.getName());
+			}
+		}
+
+		return viewData;
+	}
+
+	private DownDspInvoiceRouteViewData convertDetails(DownDspInvoiceRoute item) {
+		DownDspInvoiceRouteViewData viewData = convert(item);
+		return viewData;
+	}
+
+	private String validError(DownDspInvoiceRouteViewData data) {
+
+		if (StringUtils.isNotEmpty(data.getStartDate())) {
+			data.setStartDate(data.getStartDate().replaceAll("-", "").replaceAll("/", ""));
+		}
+		if (StringUtils.isNotEmpty(data.getEndDate())) {
+			data.setEndDate(data.getEndDate().replaceAll("-", "").replaceAll("/", ""));
+		}
+		if (StringUtils.isNotEmpty(data.getStartTime())) {
+			data.setStartTime(data.getStartTime().replaceAll(":", ""));
+		}
+		if (StringUtils.isNotEmpty(data.getEndTime())) {
+			data.setEndTime(data.getEndTime().replaceAll(":", ""));
+		}
+
+		String error = "";
+		if (StringUtils.isEmpty(data.getStartDate())) {
+			error += "生效期【开始日期】不能为空<br/>";
+		}
+		if (StringUtils.isEmpty(data.getEndDate())) {
+			error += "生效期【失效日期】不能为空<br/>";
+		}
+		if (StringUtils.isEmpty(data.getStartTime())) {
+			error += "生效期【开始时间】不能为空<br/>";
+		}
+		if (StringUtils.isEmpty(data.getEndTime())) {
+			error += "生效期【失效时间】不能为空<br/>";
+		}
+		if (data.getPriority() == null) {
+			error += "优先级不能为空<br/>";
+		}
+		if (StringUtils.isEmpty(data.getChannelMercNo())) {
+			error += "通道商户编号未指定<br/>";
+		}
+		else if (data.getChannel() != null) {
+			List<String> channelMercNames = new ArrayList<String>();
+			String[] channelMercNos = data.getChannelMercNo().split(",");
+			for (String channelMercNo : channelMercNos) {
+				PasswayDspMerchantData routeMerc = PasswayDspMerchants.get(data.getChannel(), channelMercNo);
+				if (routeMerc != null) {
+					channelMercNames.add(routeMerc.getChannelAccName());
+				}
+				else {
+					error += String.format("通道[%s]下不存在商户[%s]<br/>", data.getChannel(), data.getChannelMercNo());
+					break;
+				}
+			}
+			if (channelMercNames.size() == channelMercNos.length) {
+				data.setChannelMercName(org.apache.commons.lang3.StringUtils.join(channelMercNames, ","));
+			}
+		}
+
+		return error;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/delete/{itemId}", method = RequestMethod.POST)
+	@ResponseBody
+	public AjaxResponseData<Boolean> delete(@PathVariable String itemId) {
+		AjaxResponseData<Boolean> ret = new AjaxResponseData<Boolean>(false);
+		ret.setState(EResponseState.CustomMsg);
+		String message = "";
+		try {
+			if (StringUtils.isNotEmpty(itemId)) {
+				DownDspInvoiceRoute model = downDspInvoiceRouteDAO.findOne(itemId);
+				if (model == null) {
+					message = "数据已被删除，请重新刷新画面！";
+				}
+				else {
+					downDspInvoiceRouteDAO.delete(model);
+					cacheDataChangeService.notifyOthers(DownDspInvoiceRouteData.class);
+					message = "删除成功！";
+					ret.setState(EResponseState.Successful);
+				}
+			}
+			else {
+				message = "数据已被删除，请重新刷新画面！";
+			}
+		} catch (Exception e) {
+			log.error(e, e);
+			message = "删除失败！ " + e.getMessage();
+		}
+		ret.setMessage(message);
+		return ret;
+	}
+}

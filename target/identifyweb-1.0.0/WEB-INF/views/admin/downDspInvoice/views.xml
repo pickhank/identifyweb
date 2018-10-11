@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition extends="box" name="/admin/downDspInvoice/index">
+		<put-attribute name="body" value="/WEB-INF/views/admin/downDspInvoice/index.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/downDspInvoice/detail">
+		<put-attribute name="body" value="/WEB-INF/views/admin/downDspInvoice/detail.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/downDspInvoice/sum">
+		<put-attribute name="body" value="/WEB-INF/views/admin/downDspInvoice/sum.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/downDspInvoice/upSum">
+		<put-attribute name="body" value="/WEB-INF/views/admin/downDspInvoice/upSum.jsp" />
+		<!-- <put-list-attribute name="scripts">
+			<add-attribute value="/resources/js/jquery/jquery-ui-1.9.1.custom.min.js" />
+			<add-attribute value="/resources/js/jquery/jquery.ui.datepicker-zh-CN.js" />
+		</put-list-attribute>
+		<put-list-attribute name="styles">
+			<add-attribute value="/resources/css/ui-lightness/jquery-ui-1.9.1.custom.min.css" />
+		</put-list-attribute> -->
+	</definition>
+</tiles-definitions>

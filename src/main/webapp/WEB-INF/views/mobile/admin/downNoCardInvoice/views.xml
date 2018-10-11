@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition extends="mobile" name="/mobile/admin/downNoCardInvoice/index">
+		<put-attribute name="body" value="/WEB-INF/views/mobile/admin/downNoCardInvoice/index.jsp" />
+	</definition>
+	<definition extends="mobile" name="/mobile/admin/downNoCardInvoice/sum">
+		<put-attribute name="body" value="/WEB-INF/views/mobile/admin/downNoCardInvoice/sum.jsp" />
+	</definition>
+	<definition extends="mobile" name="/mobile/admin/downNoCardInvoice/detail">
+		<put-attribute name="body" value="/WEB-INF/views/mobile/admin/downNoCardInvoice/detail.jsp" />
+	</definition>
+	<definition extends="mobile" name="/mobile/admin/downNoCardInvoice/upSum">
+		<put-attribute name="body" value="/WEB-INF/views/mobile/admin/downNoCardInvoice/upSum.jsp" />
+	</definition>
+</tiles-definitions>

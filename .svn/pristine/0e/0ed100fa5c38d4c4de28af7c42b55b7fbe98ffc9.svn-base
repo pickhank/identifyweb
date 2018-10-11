@@ -1,0 +1,304 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.framework.persistence.service.impl;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.woodare.framework.model.AbstractModel;
+import com.woodare.framework.persistence.service.ISimpleDAO;
+
+/**
+ * ClassName: AbstractSimpleDAO
+ * 
+ * @description
+ * @author framework
+ * @Date 2013-4-1
+ * @param <T>
+ */
+@Transactional(propagation = Propagation.MANDATORY)
+public abstract class AbstractSimpleDAO<T extends AbstractModel> implements ISimpleDAO<T> {
+
+	protected final static String MODEL_PACKAGE_NAME = "com.woodare.pjtmnger.jpa.model";
+
+	protected final static String SERVICE_CLASS_SUFFIX = "DAO";
+
+	private Log log = LogFactory.getLog(AbstractSimpleDAO.class);
+
+	public AbstractSimpleDAO() {
+	}
+
+	@PersistenceContext
+	private EntityManager entityManager;
+
+	protected EntityManager getEntityManager() {
+		return entityManager;
+	}
+
+	@Override
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public T findOne(final String id) {
+		return this.entityManager.find(getDomainClass(), id);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public List<T> findAll() {
+		return this.entityManager.createQuery("from " + getDomainClass().getName()).getResultList();
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public <VO> List<VO> getResultList(Query query, Class<VO> cls) {
+		List<VO> rel = null;
+		List<Object> objLst = query.getResultList();
+		rel = new ArrayList<VO>();
+		try {
+			for (Object obj : objLst) {
+				if (obj instanceof Object[]) {
+					Class[] parameterTypes = { Object[].class };
+					Object[] objs = { (Object[]) obj };
+					java.lang.reflect.Constructor constructor = cls.getConstructor(parameterTypes);
+					VO t = (VO) constructor.newInstance(objs);
+					rel.add(t);
+				}
+			}
+		} catch (Exception e) {
+			log.error(e, e);
+		}
+
+		return rel;
+	}
+
+	@Override
+	public void save(final T entity) {
+		// Force to keep entity as valid
+		if (entity.getCreateDate() == null) {
+			entity.setCreateDate(new Date());
+		}
+		if (entity.getUpdateDate() == null) {
+			entity.setUpdateDate(new Date());
+		}
+		this.entityManager.persist(entity);
+		// get id
+		this.entityManager.flush();
+		this.entityManager.refresh(entity);
+	}
+	
+	@Override
+	public void update(final T entity) {
+		if (entity.getCreateDate() == null) {
+			entity.setCreateDate(new Date());
+		}
+		entity.setUpdateDate(new Date());
+		this.entityManager.merge(entity);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void saveForce(final T entity) {
+		// Force to keep entity as valid
+		entity.setCreateDate(new Date());
+		entity.setUpdateDate(new Date());
+		
+		
+		this.entityManager.persist(entity);
+		// get id
+		this.entityManager.flush();
+		this.entityManager.refresh(entity);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void updateForce(final T entity) {
+		if (entity.getCreateDate() == null) {
+			entity.setCreateDate(new Date());
+		}
+		entity.setUpdateDate(new Date());
+		this.entityManager.merge(entity);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void deleteForce(final T entity) {
+		this.entityManager.remove(entity);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void deleteByIdForce(final String entityId) {
+		deleteById(entityId);
+	}
+
+	@Override
+	public void delete(final T entity) {
+		this.entityManager.remove(entity);
+	}
+
+	@Override
+	public void deleteById(final String entityId) {
+		final T entity = this.findOne(entityId);
+		if (entity != null) {
+			this.delete(entity);
+		}
+	}
+
+	@Override
+	public void deleteByIds(final List<String> entityIds) {
+		if (entityIds != null && entityIds.size() > 0) {
+			for (String entityId : entityIds) {
+				final T entity = this.findOne(entityId);
+				if (entity != null) {
+					this.delete(entity);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	protected abstract Class<T> getDomainClass();
+
+	/**
+	 * @param key
+	 * @param sql
+	 * @param param
+	 * @return
+	 */
+	protected TypeCondition createCondition(String key, String sql, Object param) {
+		return new TypeCondition(key, sql, param);
+	}
+
+	/**
+	 * @param query
+	 * @param cons
+	 * @return
+	 */
+	protected Query addParameters(Query query, List<TypeCondition> cons) {
+		for (TypeCondition con : cons) {
+			if (StringUtils.hasLength(con.getKey()) && con.getParam() != null) {
+				if (con.getParam() instanceof Calendar) {
+					Calendar cal = (Calendar) con.getParam();
+					query = query.setParameter(con.getKey(), cal, con.getType());
+				}
+				else if (con.getParam() != null) {
+					query = query.setParameter(con.getKey(), con.getParam());
+				}
+			}
+		}
+		return query;
+	}
+
+	/**
+	 * @param query
+	 * @param cons
+	 * @return
+	 */
+	protected int executeUpdate(String sql, List<TypeCondition> fields) {
+		Query query = this.getEntityManager().createQuery(sql);
+		if (fields != null) {
+			for (TypeCondition field : fields) {
+				query.setParameter(field.getKey(), field.getParam());
+			}
+		}
+		return query.executeUpdate();
+	}
+
+	/**
+	 * @param cons
+	 * @param delim
+	 * @return
+	 */
+	protected String joinConditions(List<TypeCondition> cons, String delim) {
+		if (cons != null && cons.size() > 0) {
+			List<String> sqlLst = new ArrayList<String>();
+			for (TypeCondition con : cons) {
+				sqlLst.add(con.getSql());
+			}
+			return StringUtils.collectionToDelimitedString(sqlLst, delim);
+		}
+		return null;
+	}
+
+	/**
+	 * ClassName: TypeCondition
+	 * 
+	 * @description
+	 * @author framework
+	 * @Date 2013-4-1
+	 */
+	protected class TypeCondition {
+		private String key;
+		private String sql;
+		private Object param;
+		private TemporalType type;
+
+		public TypeCondition(String key, String sql, Object param) {
+			this.key = key;
+			this.sql = sql;
+			if (param instanceof String) {
+				param = ((String) param).trim();
+			}
+			this.param = param;
+		}
+
+		public TypeCondition(String key, String sql, Object param, TemporalType type) {
+			this.key = key;
+			this.sql = sql;
+			this.param = param;
+			this.type = type;
+		}
+
+		/**
+		 * @return the type
+		 */
+		public TemporalType getType() {
+			return type;
+		}
+
+		/**
+		 * @return the key
+		 */
+		public String getKey() {
+			return key;
+		}
+
+		/**
+		 * @return the sql
+		 */
+		public String getSql() {
+			return sql;
+		}
+
+		/**
+		 * @return the param
+		 */
+		public Object getParam() {
+			return param;
+		}
+	}
+}

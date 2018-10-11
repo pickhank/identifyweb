@@ -1,0 +1,125 @@
+/******************************************************************************
+ *
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *
+ *****************************************************************************/
+package com.woodare.template.jpa.persistence.persistence.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.persistence.service.impl.AbstractPagedDAO;
+import com.woodare.template.jpa.model.DownMerchant;
+import com.woodare.template.jpa.persistence.data.downmerchant.SearchDownMerchantData;
+import com.woodare.template.jpa.persistence.persistence.IDownMerchantDAO;
+
+/**
+ *
+ * ClassName: DownMerchantDAO
+ *
+ * @description
+ * @author to_be_replaced_by_owner
+ * @Date 2016/11/11
+ *
+ */
+@Service
+public class DownMerchantDAO extends AbstractPagedDAO<DownMerchant> implements IDownMerchantDAO {
+
+	@Override
+	protected Class<DownMerchant> getDomainClass() {
+		return DownMerchant.class;
+	}
+
+	@Override
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public IPagedList<DownMerchant> searchDownMerchants(SearchDownMerchantData searchData) {
+
+		StringBuffer sql = new StringBuffer("from DownMerchant a");
+
+		List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+
+		// Add filter conditions
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			conditions.add(new TypeCondition("id", "a.id = :id", searchData.getId()));
+		}
+		if (searchData.getIds() != null && searchData.getIds().size() > 0) {
+			conditions.add(new TypeCondition("ids", "a.id in (:ids)", searchData.getIds()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getAgentId())) {
+			conditions.add(new TypeCondition("agentId", "a.agentId = :agentId", searchData.getAgentId()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getSettleDate())) {
+			conditions.add(new TypeCondition("settleDate", "a.settleDate = :settleDate", searchData.getSettleDate()));
+		}
+		if (searchData.getMercCategory() != null) {
+			conditions.add(new TypeCondition("mercCategory", "a.mercCategory = :mercCategory", searchData.getMercCategory()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			conditions.add(new TypeCondition("keywords", "(a.mchNo like :keywords or a.name like :keywords or a.phone like :keywords or a.accCardNo like :keywords or a.accCardHolder like :keywords)", "%" + searchData.getKeywords() + "%"));
+		}
+		// Append conditions
+		if (conditions != null && conditions.size() > 0) {
+			sql.append(" where ").append(this.joinConditions(conditions, " and "));
+		}
+
+		// Create query statements
+		TypedQuery<DownMerchant> query = this.getEntityManager().createQuery(sql.toString() + " order by a.mchNo desc", DownMerchant.class);
+		TypedQuery<Long> totalQuery = this.getEntityManager().createQuery("select count(a.id) " + sql.toString(), Long.class);
+
+		// Append conditions' variables
+		this.addParameters(query, conditions);
+		this.addParameters(totalQuery, conditions);
+
+		// Send back returns
+		return this.getPagedList(totalQuery, query, searchData);
+	}
+
+	@Override
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public DownMerchant findByMchNo(String mchNo) {
+		TypedQuery<DownMerchant> query = this.getEntityManager().createQuery("from DownMerchant a where a.mchNo = :mchNo ",
+				DownMerchant.class);
+		query.setMaxResults(1);
+		query.setParameter("mchNo", mchNo);
+		List<DownMerchant> users = query.getResultList();
+		return users != null && users.size() > 0 ? users.get(0) : null;
+	}
+
+	@Override
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public String getMaxMechNo() {
+		TypedQuery<DownMerchant> query = this.getEntityManager().createQuery("from DownMerchant a order by a.mchNo desc", DownMerchant.class);
+		query.setMaxResults(1);
+		List<DownMerchant> items = query.getResultList();
+		String maxMchNo = "S0001";
+		if (items != null && items.size() > 0) {
+			DownMerchant item = items.get(0);
+			maxMchNo = item.getMchNo().substring(1);
+			maxMchNo = "S" + String.format("%04d", Integer.valueOf(maxMchNo) + 1);
+		}
+		return maxMchNo;
+	}
+
+	@Override
+	// @Transactional(propagation = Propagation.REQUIRED)
+	public int finishSettle(String settleDate) {
+		String sql = "update DownMerchant a set a.settleDate = '" + settleDate + "' ";
+		Query executeQuery = this.getEntityManager().createQuery(sql.toString());
+		return executeQuery.executeUpdate();
+	}
+}

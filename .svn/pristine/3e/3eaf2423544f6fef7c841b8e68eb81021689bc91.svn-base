@@ -1,0 +1,45 @@
+package com.woodare.template.jersery.webservice.busi.base;
+
+import com.thirdparty.passway._data.PasswayDspResponseData;
+import com.woodare.framework.exception.MessageWooException;
+import com.woodare.template.jpa.model.DownDspInvoice;
+
+/**
+ * 机构收支明细处理服务
+ * 
+ * @author Luke
+ */
+public interface IDownMerchantBalanceService {
+
+	/**
+	 * 处理验签交易结果
+	 * 
+	 * @param oriModel
+	 * @param respData
+	 * @return
+	 * @throws MessageWooException
+	 */
+	DownDspInvoice handleDspResult(DownDspInvoice oriModel, PasswayDspResponseData respData) throws MessageWooException;
+	
+	/**
+	 * 验签交易收支额度处理
+	 * 
+	 * @param invoice
+	 * @param direction
+	 * @param remark
+	 * @return
+	 * @throws MessageWooException
+	 */
+	boolean recordDspInvoice(DownDspInvoice invoice, int direction, String remark) throws MessageWooException;
+	
+	/**
+	 * 结算统计记账
+	 * 
+	 * @param mchNo
+	 * @param startOfDay
+	 * @param endOfDay
+	 * @return
+	 * @throws Exception
+	 */
+	boolean recordSettle() throws Exception;
+}

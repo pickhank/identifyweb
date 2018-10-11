@@ -1,0 +1,265 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.template.jpa.persistence.persistence.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.persistence.service.impl.AbstractPagedDAO;
+import com.woodare.template.jersery.servicedata.downmerchant.DownMerchantServiceData;
+import com.woodare.template.jpa.model.DownMerchantFundAccount;
+import com.woodare.template.jpa.persistence.data.downmerchantfundaccount.SearchDownMerchantFundAccountData;
+import com.woodare.template.jpa.persistence.persistence.IDownMerchantFundAccountDAO;
+
+/**
+ * ClassName: DownMerchantFundAccountDAO
+ * 
+ * @description
+ * @author woo_maven_auto_generate
+ * @Date 2018/03/05
+ */
+@Service
+public class DownMerchantFundAccountDAO extends AbstractPagedDAO<DownMerchantFundAccount> implements IDownMerchantFundAccountDAO {
+
+	@Override
+	protected Class<DownMerchantFundAccount> getDomainClass() {
+		return DownMerchantFundAccount.class;
+	}
+
+	@Override
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public IPagedList<DownMerchantFundAccount> searchItems(SearchDownMerchantFundAccountData searchData) {
+
+		StringBuffer sql = new StringBuffer("from DownMerchantFundAccount a");
+
+		List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+
+		// Add filter conditions
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			conditions.add(new TypeCondition("id", "a.id = :id", searchData.getId()));
+		}
+		if (searchData.getIds() != null && searchData.getIds().size() > 0) {
+			conditions.add(new TypeCondition("ids", "a.id in (:ids)", searchData.getIds()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			conditions.add(new TypeCondition("keywords", "(a.id like :keywords)", "%" + searchData.getKeywords() + "%"));
+		}
+		if (StringUtils.isNotEmpty(searchData.getSettleDate())) {
+			conditions.add(new TypeCondition("settleDate", "a.settleDate = :settleDate", searchData.getSettleDate()));
+		}
+		if (searchData.getChangedFlag() != null) {
+			conditions.add(new TypeCondition("changedFlag", "a.changedFlag = :changedFlag", searchData.getChangedFlag()));
+		}
+		if (searchData.getAccountType() != null) {
+			conditions.add(new TypeCondition("accountType", "a.accountType = :accountType", searchData.getAccountType()));
+		}
+		
+		// Append conditions
+		if (conditions != null && conditions.size() > 0) {
+			sql.append(" where ").append(this.joinConditions(conditions, " and "));
+		}
+
+		if (StringUtils.isEmpty(searchData.getOrderString())) {
+			searchData.setOrderString("createDate desc");
+		}
+
+		// Create query statements
+		TypedQuery<DownMerchantFundAccount> query = this.getEntityManager().createQuery(sql.toString() + " order by a." + searchData.getOrderString(), DownMerchantFundAccount.class);
+		TypedQuery<Long> totalQuery = this.getEntityManager().createQuery("select count(a.id) " + sql.toString(), Long.class);
+
+		// Append conditions' variables
+		this.addParameters(query, conditions);
+		this.addParameters(totalQuery, conditions);
+
+		// Send back returns
+		return this.getPagedList(totalQuery, query, searchData);
+	}
+
+	@Override
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public DownMerchantFundAccount findByMchNo(String mchNo) {
+		TypedQuery<DownMerchantFundAccount> query = this.getEntityManager().createQuery("from DownMerchantFundAccount a where a.mchNo = :mchNo ", DownMerchantFundAccount.class);
+		query.setMaxResults(1);
+		query.setParameter("mchNo", mchNo);
+		List<DownMerchantFundAccount> users = query.getResultList();
+		return users != null && users.size() > 0 ? users.get(0) : null;
+	}
+
+	/**
+	 * 变动当日余额
+	 */
+	@Override
+	public int changeBalance(DownMerchantServiceData diffModel) {
+		List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+		List<TypeCondition> wheres = new ArrayList<TypeCondition>();
+
+		// 设置资金状态变化标识
+		conditions.add(new TypeCondition("changedFlag", "a.changedFlag = :changedFlag", true));
+
+		// 限定本次更新的商户、代理商
+		wheres.add(new TypeCondition("mchNoCons", "a.mchNo = :mchNoCons", diffModel.getMchNo()));
+
+		// T1结算款
+		if (diffModel.getSettleInAmt() != null) {
+			conditions.add(new TypeCondition("settleInAmt", "a.settleInAmt = a.settleInAmt + :settleInAmt", diffModel.getSettleInAmt()));
+		}
+		// T1已用款
+		if (diffModel.getSettleOutAmt() != null) {
+			conditions.add(new TypeCondition("settleOutAmt", "a.settleOutAmt = a.settleOutAmt + :settleOutAmt", diffModel.getSettleOutAmt()));
+			
+			if(diffModel.getPreAuthDspFlg() == null || diffModel.getPreAuthDspFlg() == false) {
+			wheres.add(new TypeCondition("settleOutAmtCon", "a.settleInAmt >= a.frozenAmt + a.settleOutAmt + :settleOutAmtCon", diffModel.getSettleOutAmt()));
+		}
+	}
+	// T0结算款
+		if (diffModel.getCurInAmt() != null) {
+		conditions.add(new TypeCondition("curInAmt", "a.curInAmt = a.curInAmt + :curInAmt", diffModel.getCurInAmt()));
+		}
+		// T0已用款
+		if (diffModel.getCurOutAmt() != null) {
+			conditions.add(new TypeCondition("curOutAmt", "a.curOutAmt = a.curOutAmt + :curOutAmt", diffModel.getCurOutAmt()));
+			
+			String t1LeftFrozenEnough = "(a.settleInAmt >= a.frozenAmt + a.settleOutAmt and a.curInAmt * :creditRatio / 100 >= a.curOutAmt + :curOutAmt)";
+			String t1FrozenNotEnough  = "(a.settleInAmt < a.frozenAmt + a.settleOutAmt and (a.settleInAmt - a.frozenAmt - a.settleOutAmt + a.curInAmt ) * :creditRatio / 100 >= a.curOutAmt + :curOutAmt)";
+			
+			wheres.add(new TypeCondition("creditRatio", "(" + t1LeftFrozenEnough + " or " + t1FrozenNotEnough + ")", diffModel.getCreditRatio()));
+		}
+		if (diffModel.getSettleDate() != null) {
+			wheres.add(new TypeCondition("settleDate", "a.settleDate = :settleDate", diffModel.getSettleDate()));
+		}
+
+		StringBuffer sql = new StringBuffer();
+		sql.append("update DownMerchantFundAccount a ");
+		sql.append(" set " + this.joinConditions(conditions, ","));
+		sql.append(" where " + this.joinConditions(wheres, " and "));
+
+		conditions.addAll(wheres);
+
+		Query executeQuery = this.getEntityManager().createQuery(sql.toString());
+		this.addParameters(executeQuery, conditions);
+
+		return executeQuery.executeUpdate();
+	}
+
+
+	/**
+	 * 冻结账户余额
+	 */
+	@Override
+	public int frozenBalance(Long frozenAmt, String mchNo) {
+		StringBuffer sql = new StringBuffer();
+		sql.append("update DownMerchantFundAccount a ");
+		sql.append("set a.frozenAmt = a.frozenAmt + " + frozenAmt + " ");
+		sql.append("where a.frozenAmt + " + frozenAmt + " >= 0");
+		sql.append("and a.mchNo = '" + mchNo + "'");
+
+		Query executeQuery = this.getEntityManager().createQuery(sql.toString());
+		return executeQuery.executeUpdate();
+	}
+	
+	@Override
+	// @Transactional(propagation = Propagation.REQUIRED)
+	public int addToHistory(String settleDate) {
+		String sql = "insert into down_merchant_fund_account_his ";
+		sql += "(";
+		/** 主键 */
+		sql += "id, ";
+		/** 机构编号 */
+		sql += "mch_no, ";
+		/** 姓名 */
+		sql += "mch_name, ";
+		/** 账户类别 */
+		sql += "account_type, ";
+		/** 结算记账批次号 */
+		sql += "settle_balance_no, ";
+		/** 结算日期（标识本次） */
+		sql += "settle_date, ";
+		/** 期初余额, 单位：分 */
+		sql += "last_settle_amt, ";
+		/** T1账户余额, 单位：分 */
+		sql += "settle_in_amt, ";
+		/** 已清算金额, 单位：分 */
+		sql += "settle_out_amt, ";
+		/** 当日入账额 , 单位：分 */
+		sql += "cur_in_amt, ";
+		/** T0提现金额, 单位：分 */
+		sql += "cur_out_amt, ";
+		// 其他字段
+		sql += "create_date, update_date, delete_status";
+		sql += ") ";
+		sql += "select ";
+		sql += "UUID() id, ";
+		sql += "mch_no, ";
+		sql += "mch_name, ";
+		sql += "account_type, ";
+		sql += "settle_balance_no, ";
+		sql += ":settleDate settle_date, ";
+		sql += "last_settle_amt, ";
+		sql += "settle_in_amt, ";
+		sql += "settle_out_amt, ";
+		sql += "cur_in_amt, ";
+		sql += "cur_out_amt, ";
+		sql += "now(), now(), delete_status ";
+		sql += "from down_merchant_fund_account ";
+		sql += "where changed_flag = :changedFlagCon ";
+
+		Query executeQuery = this.getEntityManager().createNativeQuery(sql.toString());
+		executeQuery.setParameter("settleDate", settleDate);
+		executeQuery.setParameter("changedFlagCon", true);
+		
+		return executeQuery.executeUpdate();
+	}
+
+	@Override
+	// @Transactional(propagation = Propagation.REQUIRED)
+	public int makeSettle(String settleDate, String settleBalanceNo) {
+		String sql = "update DownMerchantFundAccount a set ";
+		// 结算记账批次号
+		sql += "a.settleBalanceNo = :settleBalanceNo, ";
+		// 结算日期，变更本次结算
+		sql += "a.settleDate = :settleDate, ";
+		// 标记数据状态为未修改
+		sql += "a.changedFlag = :changedFlag, ";
+		// T1结算余额, 折算掉T0\T1的清算款，累加当日入账金额
+		sql += "a.settleInAmt = a.settleInAmt - a.settleOutAmt + a.curInAmt - a.curOutAmt, ";
+		// 结算后T1资金账户余额
+		sql += "a.lastSettleAmt = a.settleInAmt - a.settleOutAmt + a.curInAmt - a.curOutAmt, ";
+		// T1结算余额, 清空
+		sql += "a.settleOutAmt = 0, ";
+		// 当日入金额 , 清空
+		sql += "a.curInAmt = 0, ";
+		// 当日出金额, 清空
+		sql += "a.curOutAmt = 0 ";
+
+		// 限制本次批结算更新的数据范围
+		sql += "where a.changedFlag = :changedFlagCon ";
+
+		Query executeQuery = this.getEntityManager().createQuery(sql.toString());
+
+		executeQuery.setParameter("settleDate", settleDate);
+		executeQuery.setParameter("settleBalanceNo", settleBalanceNo);
+		executeQuery.setParameter("changedFlag", false);
+		
+		executeQuery.setParameter("changedFlagCon", true);
+		
+		return executeQuery.executeUpdate();
+	}
+}

@@ -1,0 +1,47 @@
+#Updated at Wed Jan 16 13:26:13 CST 2013
+#Wed Feb 16 13:26:13 CST 2018
+#prod
+
+# enable api test
+server.position=A
+api.test=true
+
+run.timer.bill=true
+run.timer=true
+run.timer.bal.query=true
+
+jms.url=tcp://localhost:61616
+jms.username=admin
+jms.password=admin
+jms.open=true
+
+# Super administrator name & password, and password would be only used in first-time initialized
+super.account.name=admin
+super.account.password=admin
+
+# Copied from dynamic/static configuration
+root.base.url=http://116.62.61.74/identifyweb
+root.resource.url=http://116.62.61.74/identifyweb
+# the base url to access to image file
+root.base.url.alias=http://116.62.61.74/identifyweb
+# the base url to access to image file
+root.imagesources.url=http://116.62.61.74/identifyweb/uploads
+
+# Default the page size of each query
+default.data.paged.size=20
+
+# Uploaded file location
+root.uploadfiles.valid=uploads
+
+# Enable database properties configuration
+database.config.enable=true
+
+# Connection Information
+http.ConnectionTimeOut=5000
+http.Retry=1
+http.ReadTimeOut=30000
+http.MaxConnection=100
+
+uploads.dir=/opt/apps/woo-web-template
+
+cpcn.certs.path=/opt/apps/identifyweb/src/main/resources/certs/dsp

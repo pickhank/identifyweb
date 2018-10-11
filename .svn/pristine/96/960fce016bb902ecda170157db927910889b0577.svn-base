@@ -1,0 +1,84 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" trimDirectiveWhitespaces="true"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="utils" tagdir="/WEB-INF/tags/utils"%>
+<c:if test="${not empty errorMsg}">
+<script>
+$(function(){
+	$.messager.alert('错误','${errorMsg}');
+});
+</script>
+</c:if>
+<form class="search-form" action="<c:url value="/admin/chargeDetail/index"/>" method="post">
+	<div class="search-group">
+		<label>关键字：</label>
+		<input type="text" class="input-box search-input-box" placeholder="关键字" name="keywords" value="${search.keywords}">
+	</div>
+	<div>
+		<label for="status">充值机构：</label>
+		<select name="status" class="input-box search-input-box">
+			<option value="">全部
+			<option value="00" >XX
+			<option value="01" >XX
+			<option value="09" >XX
+			<option value="02" >XX
+		</select>
+	</div>
+	<input type="hidden" name="pageIndex" value="${search.pageIndex}">
+	<input type="hidden" name="pageSize" value="${search.pageSize}">
+	<input type="submit" value="搜索" class="btn">
+	<a href="<c:url value="/admin/chargeDetail/add" />" class="btn btn-orange pull-right operate-detail" >充值</a>
+</form>
+<table class="list-wapper">
+	<tr class="list-header">
+		<td>录入人</td>
+		<td>商户号</td>
+		<td>商户名</td>
+		<td>充值处理状态</td>
+		<td>审核时间</td>
+		<td>充值后金额</td>
+		<td>备注</td>
+		<td>操作</td>
+	</tr>
+	<c:forEach var="item" items="${res.items}" varStatus="itemStatus" >
+		<tr class="list-item">
+			<td>
+				<c:out value="${item.createName}" />
+			</td>
+			<td>
+				<c:out value="${item.mchNo}" />
+			</td>
+			<td>
+				<c:out value="${item.mchName}" />
+			</td>
+			<td>
+				<c:if test="${(item.status) == 0}">
+					<c:out value="待审核" />
+				</c:if>
+				<c:if test="${(item.status) == 1}">
+					<c:out value="审核通过" />
+				</c:if>
+				<c:if test="${(item.status) == 2}">
+					<c:out value="审核失败" />
+				</c:if>
+			</td>
+			<td>
+				<c:out value="${item.auditDate}" />
+			</td>
+			<td>
+				<c:out value="${item.rearMoney}" />
+			</td>
+			<td>
+				<c:out value="${item.remark}" />
+			</td>
+			<td>
+				<c:if test="${(item.status) == 0}">
+					<a href="<c:url value="/admin/chargeDetail/info?id=${item.id}" />" class="choose-link operate-detail">审核</a>
+				</c:if>
+				<c:if test="${(item.status) != 0}">
+					<a href="<c:url value="/admin/chargeDetail/modify?id=${item.id}" />" class="choose-link operate-detail">查看</a>
+				</c:if>
+			</td>
+		</tr>
+	</c:forEach>
+</table>
+<utils:pager/>

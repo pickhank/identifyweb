@@ -1,0 +1,72 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.template.component.schedule;
+
+import java.util.Date;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import com.woodare.core.util.SDFFactory;
+import com.woodare.framework.utils.SysProperties;
+import com.woodare.template.busi.service.CacheDataChangeService;
+import com.woodare.template.helper.cache.DownMerchants;
+import com.woodare.template.jersery.webservice.busi.base.IDownMerchantBalanceService;
+import com.woodare.template.jpa.persistence.data.downmerchant.DownMerchantData;
+
+/**
+ * ClassName: DownMerchantSettleSchedule
+ * 
+ * @description
+ * @author Luke
+ * @Date Mar 3, 2018
+ */
+@Service
+public class DownMerchantSettleSchedule {
+	private static Logger log = Logger.getLogger(DownMerchantSettleSchedule.class);
+
+	@Autowired
+	private CacheDataChangeService cacheDataChangeService;
+
+	@Autowired
+	private IDownMerchantBalanceService downMerchantBalanceService;
+
+	/**
+	 * 每10s钟检查一次是否需要执行日终跑批任务
+	 */
+	@Scheduled(fixedDelay = 10000, initialDelay = 30000)
+	public void notifyRecord() {
+		boolean runnning = SysProperties.getInstance().getBooleanProperty("run.timer.runbatch", true);
+		if (runnning) {
+			DownMerchantData merc = DownMerchants.getByCode("A0001");
+			if(merc == null) {
+				return;
+			}
+			Date startTime = new Date();
+			String nextSettleDate = SDFFactory.DATE.format(startTime);
+			if (nextSettleDate.equals(merc.getSettleDate())) {
+				try {
+					boolean succFlag = downMerchantBalanceService.recordSettle();
+					if (succFlag) {
+						log.info("BatchSettleRunSuccess, CostTime[" + ((int) ((new Date().getTime() - startTime.getTime()) / 1000.0)) + "s]");
+					}
+					cacheDataChangeService.notifyOthers(DownMerchantData.class);
+				} catch (Exception e) {
+					log.error("BatchSettleRunError: " + e.getMessage(), e);
+				}
+			}
+		}
+	}
+}

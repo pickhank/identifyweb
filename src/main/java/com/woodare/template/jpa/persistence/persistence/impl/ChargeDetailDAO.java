@@ -1,0 +1,320 @@
+/******************************************************************************
+ *
+ *                      Woodare PROPRIETARY INFORMATION
+ *
+ *          The information contained herein is proprietary to Woodare
+ *           and shall not be reproduced or disclosed in whole or in part
+ *                    or used for any design or manufacture
+ *              without direct written authorization from FengDa.
+ *
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.
+ *
+ *****************************************************************************/
+package com.woodare.template.jpa.persistence.persistence.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.persistence.service.impl.AbstractPagedDAO;
+import com.woodare.template.jpa.model.ChargeDetail;
+import com.woodare.template.jpa.persistence.data.chargedetail.SearchChargeDetailData;
+import com.woodare.template.jpa.persistence.persistence.IChargeDetailDAO;
+
+/**
+ * ClassName: ChargeDetailDAO
+ *
+ * @description
+ * @author woo_maven_auto_generate
+ * @Date 2018/09/29
+ */
+@Service
+public class ChargeDetailDAO extends AbstractPagedDAO<ChargeDetail> implements IChargeDetailDAO {
+
+	@Override
+	protected Class<ChargeDetail> getDomainClass() {
+		return ChargeDetail.class;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public IPagedList<ChargeDetail> searchItems(SearchChargeDetailData searchData) {
+
+		StringBuffer sql = new StringBuffer("from ChargeDetail a");
+
+		List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+
+		// Add filter conditions
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			conditions.add(new TypeCondition("id", "a.id = :id", searchData.getId()));
+		}
+		if (searchData.getIds() != null && searchData.getIds().size() > 0) {
+			conditions.add(new TypeCondition("ids", "a.id in (:ids)", searchData.getIds()));
+		}
+		// change the key
+		if (StringUtils.isNotEmpty(searchData.getKeywords())) {
+			conditions.add(new TypeCondition("keywords", "(a.mchName like :keywords or a.remark like :keywords)", "%" + searchData.getKeywords() + "%"));
+		}
+		// 日期查询问题
+		if (StringUtils.isNotEmpty(searchData.getStartDate())) {
+			conditions.add(new TypeCondition("startDate", "a.auditDate >= :startDate", searchData.getStartDate().replaceAll("/", "")));
+		}
+		if (StringUtils.isNotEmpty(searchData.getEndDate())) {
+			conditions.add(new TypeCondition("endDate", "a.auditDate <= :endDate", searchData.getEndDate().replaceAll("/", "")));
+		}
+		// 状态过滤
+		if (searchData.getStatus() != null) {
+			conditions.add(new TypeCondition("status", "a.status = :status", searchData.getStatus()));
+		}
+
+		// Append conditions
+		if (conditions != null && conditions.size() > 0) {
+			sql.append(" where ").append(this.joinConditions(conditions, " and "));
+		}
+
+		if (true) {
+			searchData.setOrderString("createDate desc");
+		}
+
+		// Create query statements
+		TypedQuery<ChargeDetail> query = this.getEntityManager().createQuery(sql.toString() + " order by a." + searchData.getOrderString(), ChargeDetail.class);
+		TypedQuery<Long> totalQuery = this.getEntityManager().createQuery("select count(a.id) " + sql.toString(), Long.class);
+
+		// Append conditions' variables
+		this.addParameters(query, conditions);
+		this.addParameters(totalQuery, conditions);
+
+		// Send back returns
+		return this.getPagedList(totalQuery, query, searchData);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public ChargeDetail findById(String id) {
+		ChargeDetail item = this.findOne(id);
+		if (item == null) {
+			item = null;
+		}
+		return item;
+	}
+
+	// @Override
+	// @Transactional(propagation = Propagation.REQUIRED)
+	// public void save(final ChargeDetail entity){
+	// entity.setCreateDate(new Date());
+	// entity.setUpdateDate(new Date());
+	//// StringBuffer sql = new StringBuffer("insert into ChargeDetail a");
+	////
+	//// List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+	////
+	//// if (StringUtils.isNotEmpty(entity.getId())) {
+	//// conditions.add(new TypeCondition("id", "a.id = :id", entity.getId()));
+	//// }
+	//// if (StringUtils.isNotEmpty(entity.getAuditDate())) {
+	//// conditions.add(new TypeCondition("auditDate", "a.auditDate = :auditDate", entity.getAuditDate()));
+	//// }
+	//// if (StringUtils.isNotEmpty(entity.getCreateName())) {
+	//// conditions.add(new TypeCondition("createName", "a.createName = :createName", entity.getCreateName()));
+	//// }
+	//// if (StringUtils.isNotEmpty(entity.getMchName())) {
+	//// conditions.add(new TypeCondition("mchName", "a.mchName = :mchName", entity.getMchName()));
+	//// }
+	//// if (entity.getRearMoney() > 0) {
+	//// conditions.add(new TypeCondition("rearMoney", "a.rearMoney = :rearMoney", entity.getRearMoney()));
+	//// }
+	//
+	// save(entity);
+	//// String sql = "";
+	//// sql += "(";
+	//// /** 主键 */
+	//// sql += "charge.id, ";
+	//// /** 审核时间 */
+	//// sql += "charge.audit_date, ";
+	//// /** 录入人 */
+	//// sql += "charge.create_name, ";
+	//// /** 商户名称 */
+	//// sql += "charge.mch_name, ";
+	//// /** 商户编号 */
+	//// sql += "charge.mch_no, ";
+	//// /** 充值金额*/
+	//// sql += "charge.rear_money, ";
+	//// /** 充值金额, 单位：分 */
+	//// sql += "charge.remark, ";
+	//// /** 当前状态 */
+	//// sql += "charge.status, ";
+	//// // 其他字段\
+	//// sql += ")";
+	//// sql += "select detail.rear_money from charge_detail AS detail Order By rear_money asc where charge.rear_money=charge.rear_money+detail.rear_money";
+	//
+	//
+	//// Query query = this.getEntityManager().createNativeQuery(sql);
+	////// query.setParameter("entity",entity);
+	////// query.executeUpdate();
+	//
+	// //select a.[用户id],b.[用户现有余额总数],a.[充值金额] as [上次充值金额],a.[充值时间] as [上次充值时间]
+	// //from [充值记录表] a
+	// // inner join (select [用户id],sum([充值金额]) as [用户现有余额总数] from [充值记录表] group by [用户id]) b
+	// // on b.[用户id]=a.[用户id]
+	// //where a.id=(select max(x.id) from [充值记录表] x where x.[用户id]=a.[用户id])
+	// //
+	// }
+
+
+//    @Override
+//    @Transactional(propagation = Propagation.REQUIRED)
+//    public void save(final ChargeDetail entity){
+//        entity.setCreateDate(new Date());
+//        entity.setUpdateDate(new Date());
+//        StringBuffer sql = new StringBuffer("insert into ChargeDetail a");
+//
+//        List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+//
+//        if (StringUtils.isNotEmpty(entity.getId())) {
+//            conditions.add(new TypeCondition("id", "a.id = :id", entity.getId()));
+//        }
+//        if (StringUtils.isNotEmpty(entity.getAuditDate())) {
+//            conditions.add(new TypeCondition("auditDate", "a.auditDate = :auditDate", entity.getAuditDate()));
+//        }
+//        if (StringUtils.isNotEmpty(entity.getCreateName())) {
+//            conditions.add(new TypeCondition("createName", "a.createName = :createName", entity.getCreateName()));
+//        }
+//        if (StringUtils.isNotEmpty(entity.getMchName())) {
+//            conditions.add(new TypeCondition("mchName", "a.mchName = :mchName", entity.getMchName()));
+//        }
+//        if (entity.getRearMoney() > 0) {
+//            conditions.add(new TypeCondition("rearMoney", "a.rearMoney = :rearMoney", entity.getRearMoney()));
+//        }
+//
+//        save(entity);
+//        String sql = "";
+//        sql += "(";
+//        /** 主键 */
+//        sql += "charge.id, ";
+//        /** 审核时间 */
+//        sql += "charge.audit_date, ";
+//        /** 录入人 */
+//        sql += "charge.create_name, ";
+//        /** 商户名称 */
+//        sql += "charge.mch_name, ";
+//        /** 商户编号 */
+//        sql += "charge.mch_no, ";
+//        /**  充值金额*/
+//        sql += "charge.rear_money, ";
+//        /** 充值金额, 单位：分 */
+//        sql += "charge.remark, ";
+//        /** 当前状态 */
+//        sql += "charge.status, ";
+//        /** 其他字段*/
+//        sql += ")";
+//        sql += "select detail.rear_money from charge_detail AS detail Order By rear_money asc where charge.rear_money=charge.rear_money+detail.rear_money";
+//
+//
+//        Query query = this.getEntityManager().createNativeQuery(sql);
+//        query.setParameter("entity",entity);
+//        query.executeUpdate();
+//
+//        select a.[用户id],b.[用户现有余额总数],a.[充值金额] as [上次充值金额],a.[充值时间] as [上次充值时间]
+//        from [充值记录表] a
+//          inner join (select [用户id],sum([充值金额]) as [用户现有余额总数] from [充值记录表] group by [用户id]) b
+//             on b.[用户id]=a.[用户id]
+//        where a.id=(select max(x.id) from [充值记录表] x where x.[用户id]=a.[用户id])
+//
+//    }
+
+    /**
+     * 增加余额
+     */
+    public int changeBalance(ChargeDetail chargeDetail) {
+        List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+        List<TypeCondition> wheres = new ArrayList<TypeCondition>();
+
+//    @Override
+//    @Transactional(propagation = Propagation.REQUIRED)
+//    public void save(final ChargeDetail entity){
+//        entity.setCreateDate(new Date());
+//        entity.setUpdateDate(new Date());
+////        StringBuffer sql = new StringBuffer("insert into ChargeDetail a");
+////
+////        List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+////
+////        if (StringUtils.isNotEmpty(entity.getId())) {
+////            conditions.add(new TypeCondition("id", "a.id = :id", entity.getId()));
+////        }
+////        if (StringUtils.isNotEmpty(entity.getAuditDate())) {
+////            conditions.add(new TypeCondition("auditDate", "a.auditDate = :auditDate", entity.getAuditDate()));
+////        }
+////        if (StringUtils.isNotEmpty(entity.getCreateName())) {
+////            conditions.add(new TypeCondition("createName", "a.createName = :createName", entity.getCreateName()));
+////        }
+////        if (StringUtils.isNotEmpty(entity.getMchName())) {
+////            conditions.add(new TypeCondition("mchName", "a.mchName = :mchName", entity.getMchName()));
+////        }
+////        if (entity.getRearMoney() > 0) {
+////            conditions.add(new TypeCondition("rearMoney", "a.rearMoney = :rearMoney", entity.getRearMoney()));
+////        }
+//
+//        save(entity);
+////        String sql = "";
+////        sql += "(";
+////        /** 主键 */
+////        sql += "charge.id, ";
+////        /** 审核时间 */
+////        sql += "charge.audit_date, ";
+////        /** 录入人 */
+////        sql += "charge.create_name, ";
+////        /** 商户名称 */
+////        sql += "charge.mch_name, ";
+////        /** 商户编号 */
+////        sql += "charge.mch_no, ";
+////        /**  充值金额*/
+////        sql += "charge.rear_money, ";
+////        /** 充值金额, 单位：分 */
+////        sql += "charge.remark, ";
+////        /** 当前状态 */
+////        sql += "charge.status, ";
+////        // 其他字段\
+////        sql += ")";
+////        sql += "select detail.rear_money from charge_detail AS detail Order By rear_money asc where charge.rear_money=charge.rear_money+detail.rear_money";
+//
+//
+////        Query query = this.getEntityManager().createNativeQuery(sql);
+//////        query.setParameter("entity",entity);
+//////        query.executeUpdate();
+//
+//        //select a.[用户id],b.[用户现有余额总数],a.[充值金额] as [上次充值金额],a.[充值时间] as [上次充值时间]
+//        //from [充值记录表] a
+//        //  inner join (select [用户id],sum([充值金额]) as [用户现有余额总数] from [充值记录表] group by [用户id]) b
+//        //     on b.[用户id]=a.[用户id]
+//        //where a.id=(select max(x.id) from [充值记录表] x where x.[用户id]=a.[用户id])
+//        //
+//    }
+
+        // 余额相加
+        if (chargeDetail.getRearMoney() != null) {
+            conditions.add(new TypeCondition("rearMoney", "a.rearMoney = a.rearMoney + :RearMoney", chargeDetail.getRearMoney()));
+
+        }
+
+        StringBuffer sql = new StringBuffer();
+
+        sql.append("update ChargeDetail a ");
+        sql.append(" set " + this.joinConditions(conditions, ","));
+        sql.append(" where " + this.joinConditions(wheres, " and "));
+
+        conditions.addAll(wheres);
+
+        Query executeQuery = this.getEntityManager().createQuery(sql.toString());
+        this.addParameters(executeQuery, conditions);
+
+        return executeQuery.executeUpdate();
+    }
+
+
+}

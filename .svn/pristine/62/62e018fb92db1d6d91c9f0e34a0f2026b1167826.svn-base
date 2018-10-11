@@ -1,0 +1,19 @@
+body {
+	background: #FFF;
+}
+.header {
+    background-color: gainsboro;
+    height: 30px;
+    line-height: 30px;
+    font-size: 18px;
+    /* font-size: 20px; */
+    /* text-indent: 1em; */
+    padding-left: 8px;
+	
+}
+.label {
+    height: 30px;
+    line-height: 30px;
+    /* text-indent: 2em; */
+    padding-left: 8px;
+}

@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="cpcn-dsp-api-1.0.0.6">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/customlibs/cpcn-dsp-api-1.0.0.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/customlibs/jcaptcha-1.0-all.jar!/" />
+      <root url="jar://$PROJECT_DIR$/customlibs/json-1.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/customlibs/patchca-0.5.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/customlibs/sms-http.jar!/" />
+      <root url="jar://$PROJECT_DIR$/customlibs/thumbnailator-0.4.5-all.jar!/" />
+      <root url="jar://$PROJECT_DIR$/customlibs/umpay_sign_V40.jar!/" />
+      <root url="jar://$PROJECT_DIR$/customlibs/woo-jpa-2.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/customlibs/thumbnailator-0.4.5-all.jar!/" />
+    </SOURCES>
+  </library>
+</component>

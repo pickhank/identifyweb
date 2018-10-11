@@ -1,0 +1,267 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.template.web.controller;
+
+import java.util.List;
+
+import com.woodare.core.util.AesUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.woodare.core.base.BaseController;
+import com.woodare.core.exception.ControllerException;
+import com.woodare.core.web.common.viewdata.AjaxResponseData;
+import com.woodare.core.web.common.viewdata.ListResponseData;
+import com.woodare.framework.data.EResponseState;
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.utils.SaftyBeanUtils;
+import com.woodare.framework.utils.StringUtils;
+import com.woodare.template.jpa.model.ChargeDetail;
+import com.woodare.template.jpa.persistence.persistence.IChargeDetailDAO;
+import com.woodare.template.web.viewdata.chargedetail.ChargeDetailViewData;
+import com.woodare.template.web.viewdata.chargedetail.SearchChargeDetailViewData;
+
+
+/**
+ * ClassName: ChargeDetailController
+ * 
+ * @description
+ * @author to_be_replaced_by_owner
+ * @Date 2015/11/15
+ */
+@Controller
+@RequestMapping("/admin/chargeDetail")
+public class AdminChargeDetailController extends BaseController {
+	private static Logger log = Logger.getLogger(AdminChargeDetailController.class);
+
+	@Autowired
+	private IChargeDetailDAO chargeDetailDAO;
+
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/index")
+	public ModelAndView index(SearchChargeDetailViewData searchData) throws ControllerException {
+		log.debug("================>"+showIndex("/admin/chargeDetail/index", searchData));
+		return showIndex("/admin/chargeDetail/index", searchData);
+	}
+
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/add", method = RequestMethod.GET)
+	public ModelAndView add(ChargeDetailViewData searchData) throws ControllerException {
+		ModelAndView mav = new ModelAndView("/admin/chargeDetail/add");
+		ChargeDetailViewData item = null;
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			ChargeDetail model = chargeDetailDAO.findOne(searchData.getId());
+			item = convertDetails(model);
+		}
+		else {
+			item = new ChargeDetailViewData();
+		}
+		mav.addObject("item", item);
+		return mav;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/add", method = RequestMethod.POST)
+	public ModelAndView addPost(ChargeDetailViewData item) {
+		ChargeDetail model = null;
+		/** 查询出所有记录*/
+		List<ChargeDetail> ch = chargeDetailDAO.findAll();
+
+		String error = validData(item);
+		if (StringUtils.isNotEmpty(error)) {
+			return alertFailed("/admin/chargeDetail/add", item, error);
+		}
+
+		if (StringUtils.isNotEmpty(item.getId())) {
+			model = chargeDetailDAO.findOne(item.getId());
+		}
+		else {
+			model = new ChargeDetail();
+		}
+		SaftyBeanUtils.copyProperties(item, model, new String[] { "id", "deleteStatus", "createDate", "updateDate" });
+		if (StringUtils.isNotEmpty(item.getId())) {
+			/** 增加金额*/
+			model.setRearMoney(model.getRearMoney() + ch.get(ch.size() - 1).getRearMoney());
+			this.chargeDetailDAO.update(model);
+		}
+		else {
+			if(ch.size() > 0){
+				/** 增加金额*/
+				model.setRearMoney(model.getRearMoney() + ch.get(ch.size() - 1).getRearMoney());
+			}
+			this.chargeDetailDAO.save(model);
+		}
+		return alertSuccess("/admin/chargeDetail/add", convertDetails(model));
+	}
+	
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/info", method = RequestMethod.GET)
+	public ModelAndView info(ChargeDetailViewData searchData) throws ControllerException {
+		ModelAndView mav = new ModelAndView("/admin/chargeDetail/info");
+		ChargeDetailViewData item = null;
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			ChargeDetail model = chargeDetailDAO.findOne(searchData.getId());
+			item = convertDetails(model);
+		}
+		else {
+			item = new ChargeDetailViewData();
+		}
+		mav.addObject("item", item);
+		return mav;
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/info", method = RequestMethod.POST)
+	public ModelAndView infoPost(ChargeDetailViewData item) {
+		ChargeDetail model = null;
+
+		String error = validData(item);
+		if (StringUtils.isNotEmpty(error)) {
+			return alertFailed("/admin/chargeDetail/info", item, error);
+		}
+
+		if (StringUtils.isNotEmpty(item.getId())) {
+			model = chargeDetailDAO.findOne(item.getId());
+		}
+		else {
+			model = new ChargeDetail();
+		}
+		SaftyBeanUtils.copyProperties(item, model, new String[] { "id", "deleteStatus", "createDate", "updateDate" });
+		if (StringUtils.isNotEmpty(item.getId())) {
+			this.chargeDetailDAO.update(model);
+		}
+		else {
+			this.chargeDetailDAO.save(model);
+		}
+		return alertSuccess("/admin/chargeDetail/info", convertDetails(model));
+	}
+	
+	@Transactional(propagation = Propagation.NEVER)
+	@RequestMapping(value = "/modify", method = RequestMethod.GET)
+	public ModelAndView modify(ChargeDetailViewData searchData) throws ControllerException {
+		ModelAndView mav = new ModelAndView("/admin/chargeDetail/modify");
+		ChargeDetailViewData item = null;
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			ChargeDetail model = chargeDetailDAO.findOne(searchData.getId());
+			item = convertDetails(model);
+		}
+		else {
+			item = new ChargeDetailViewData();
+		}
+		mav.addObject("item", item);
+		return mav;
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/modify", method = RequestMethod.POST)
+	public ModelAndView modifyPost(ChargeDetailViewData item) {
+		ChargeDetail model = null;
+
+		String error = validData(item);
+		if (StringUtils.isNotEmpty(error)) {
+			return alertFailed("/admin/chargeDetail/modify", item, error);
+		}
+
+		if (StringUtils.isNotEmpty(item.getId())) {
+			model = chargeDetailDAO.findOne(item.getId());
+		}
+		else {
+			model = new ChargeDetail();
+		}
+		SaftyBeanUtils.copyProperties(item, model, new String[] { "id", "deleteStatus", "createDate", "updateDate" });
+		if (StringUtils.isNotEmpty(item.getId())) {
+			this.chargeDetailDAO.update(model);
+		}
+		else {
+			this.chargeDetailDAO.save(model);
+		}
+		return alertSuccess("/admin/chargeDetail/modify", convertDetails(model));
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED)
+	@RequestMapping(value = "/delete/{itemId}", method = RequestMethod.POST)
+	@ResponseBody
+	public AjaxResponseData<Boolean> delete(@PathVariable String itemId) {
+		AjaxResponseData<Boolean> ret = new AjaxResponseData<Boolean>(false);
+		ret.setState(EResponseState.CustomMsg);
+		String message = "";
+		try {
+			if (StringUtils.isNotEmpty(itemId)) {
+				ChargeDetail model = chargeDetailDAO.findOne(itemId);
+				if (model == null) {
+					message = "数据已被删除，请重新刷新画面！";
+				}
+				else {
+					chargeDetailDAO.delete(model);
+					message = "删除成功！";
+					ret.setState(EResponseState.Successful);
+				}
+			}
+			else {
+				message = "数据已被删除，请重新刷新画面！";
+			}
+		} catch (Exception e) {
+			log.error(e, e);
+			message = "删除失败！ " + e.getMessage();
+		}
+		ret.setMessage(message);
+		return ret;
+	}
+
+	private ModelAndView showIndex(String jsp, SearchChargeDetailViewData searchData) {
+		ModelAndView mav = new ModelAndView(jsp);
+		IPagedList<ChargeDetail> items = chargeDetailDAO.searchItems(searchData);
+		mav.addObject("search", searchData);
+		mav.addObject("res", convertToList(items));
+		log.debug("=======================>"+mav);
+		return mav;
+	}
+
+	private ListResponseData<ChargeDetailViewData> convertToList(IPagedList<ChargeDetail> items) {
+		ListResponseData<ChargeDetailViewData> response = new ListResponseData<ChargeDetailViewData>();
+		if (items != null) {
+			for (ChargeDetail item : items) {
+				response.addItem(convert(item));
+			}
+		}
+		response.setIndex(items.getPageIndex());
+		response.setPages(items.getMaxPages());
+		response.setSize(items.getPageSize());
+		response.setTotal(items.getTotalSize());
+		return response;
+	}
+
+	private String validData(ChargeDetailViewData item) {
+		String error = "";
+		return error;
+	}
+
+	private ChargeDetailViewData convert(ChargeDetail model) {
+		ChargeDetailViewData item = SaftyBeanUtils.cloneTo(model, ChargeDetailViewData.class, new String[] { "deleteStatus" });
+		return item;
+	}
+
+	private ChargeDetailViewData convertDetails(ChargeDetail model) {
+		ChargeDetailViewData item = convert(model);
+		return item;
+	}
+}

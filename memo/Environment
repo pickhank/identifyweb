@@ -1,0 +1,129 @@
+# 安装包准备
+拷贝安装文件至主机/opt/目录
+> Maven 3.+
+> JDK 1.7
+> Tomcat 7
+> git
+> gcc
+> cronolog
+
+# 程序安装
+## JDK 安装
+```Bash
+cd /opt
+tar xvf jdk-7u80-linux-x64.tar.gz
+```
+
+## Maven 安装
+```Bash
+cd /opt
+wget http://mirror.bit.edu.cn/apache/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz
+tar -zxvf apache-maven-3.5.3-bin.tar.gz
+# 添加ali云maven仓库作为默认，conf/setttings.xml
+    <mirror>
+      <id>alimaven</id>
+      <name>aliyun maven</name>
+      <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+      <mirrorOf>central</mirrorOf>        
+    </mirror>
+```
+
+## cronolog 安装
+```Bash
+cd /opt
+yum install gcc
+tar xvf cronolog-1.6.2.tar.gz
+cd cronolog-1.6.2
+./configure 
+make
+make install
+which cronolog
+```
+
+## 安装Apache
+```Bash
+yum install -y httpd
+service httpd start
+# 新两个文件夹
+mkdir /etc/httpd/sites-enable
+mkdir /etc/httpd/sites-availble
+# 添加额外的网站配置文件夹
+vi /etc/httpd/conf/httpd.conf
+#最后一行加入
+IncludeOptional sites-enabled/*.conf
+```
+
+## Tomcat - master 安装&配置
+```Bash
+cd /opt
+tar xvf apache-tomcat-7.0.85.tar.gz
+mv apache-tomcat-7.0.85 apache-tomcat-master
+####################
+## catalina文件参数配置 - 开始
+vi /opt/apache-tomcat-master/bin/catalina.sh
+# 加入cronolog，修改如下内容
+# 修改198行, 替换[] -> []
+# 原内容,
+CATALINA_OUT="$CATALINA_BASE"/logs/catalina.out
+# 替换为,
+CATALINA_OUT="$CATALINA_BASE"/logs/catalina.%Y-%m-%d.out
+# ------------------------------------------------------
+# 修改434行、444行
+# 原内容,
+org.apache.catalina.startup.Bootstrap "$@" start \
+     >> "$CATALINA_OUT" 2>&1 "&"
+# 替换为,
+org.apache.catalina.startup.Bootstrap "$@" start 2>&1 \
+     | /usr/local/sbin/cronolog "$CATALINA_OUT" >> /dev/null 2>&1 &
+
+# 进行参数调优配置
+# 修改109行，加入如下参数
+JAVA_OPTS="-server -Xms4096m -Xmx4096m  -XX:MaxNewSize=1024m -XX:PermSize=1024m -XX:MaxPermSize=1024m -Djava.awt.headless=true"
+## catalina文件参数配置 - 结束
+####################
+ 
+####################
+## catalina文件参数配置 - 开始
+vi /opt/apache-tomcat-master/conf/server.xml
+# 添加并发连接控制参数
+<Executor name="tomcatThreadPool" namePrefix="catalina-exec-"
+        maxThreads="800" minSpareThreads="100" maxQueueSize="100" prestartminSpareThreads="true"/>
+####################
+```
+
+## Tomcat - backup 安装&配置
+```Bash
+cd /opt
+cp -Rf apache-tomcat-master apache-tomcat-backup
+vi /opt/apache-tomcat-backup/conf/server.xml
+# 修改端口，8080->9080, 8010->9010, 8009->9009, 8443->9443
+```
+
+## 导入自定义命令和参数设置
+```Bash
+vi ~/.bash_profile
+# 加入本地文件引用
+source /root/apps/ufo/memo/my_profile
+:wq
+# 手动运行一次
+source ~/.bash_profile 
+```
+
+# 部署重启发布
+```Bash
+# 切换至源码目录，执行一键重启部署
+cdw
+sh deploy.sh
+# 切换当前默认工作目录
+sw A|B
+# 切换当前映射的服务器
+swd A|B
+# 切换对外开放服务，主、备服务器切换
+swd A|B
+# 其他常用命令
+cdl #切换至当前容器下的Tomcat日志目录
+tlog #以tail方式查看实时log
+clog XXX nDays #检索实时log内的关键字XXXX；nDays表示往前翻查的日期天数，默认为0
+vlog #以vi方式查看实时log
+```
+

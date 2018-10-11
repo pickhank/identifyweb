@@ -1,0 +1,136 @@
+/******************************************************************************
+ *                                                                             
+ *                      Woodare PROPRIETARY INFORMATION                        
+ *                                                                             
+ *          The information contained herein is proprietary to Woodare         
+ *           and shall not be reproduced or disclosed in whole or in part      
+ *                    or used for any design or manufacture                    
+ *              without direct written authorization from FengDa.              
+ *                                                                             
+ *            Copyright (c) 2013 by Woodare.  All rights reserved.             
+ *                                                                             
+ *****************************************************************************/
+package com.woodare.template.jpa.persistence.persistence.impl;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import javax.persistence.TypedQuery;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.woodare.core.util.SDFFactory;
+import com.woodare.framework.data.IPagedList;
+import com.woodare.framework.persistence.service.impl.AbstractPagedDAO;
+import com.woodare.template.jpa.model.DownTradeLog;
+import com.woodare.template.jpa.persistence.data.downtradelog.SearchDownTradeLogData;
+import com.woodare.template.jpa.persistence.persistence.IDownTradeLogDAO;
+
+/**
+ * ClassName: PasswayMerchantDAO
+ * 
+ * @description
+ * @author Luke
+ * @Date 2017/11/08
+ */
+@Service
+public class DownTradeLogDAO extends AbstractPagedDAO<DownTradeLog> implements IDownTradeLogDAO {
+
+	@Override
+	protected Class<DownTradeLog> getDomainClass() {
+		return DownTradeLog.class;
+	}
+
+	@Override
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.SUPPORTS, readOnly = true)
+	public IPagedList<DownTradeLog> searchItems(SearchDownTradeLogData searchData) {
+
+		StringBuffer sql = new StringBuffer("from DownTradeLog a");
+
+		if(searchData.getSearchFlag() == null || searchData.getSearchFlag() == false) {
+			Calendar now = Calendar.getInstance();
+			searchData.setStartDt(SDFFactory.DATE_SLASH.format(now.getTime()));
+			searchData.setEndDt(searchData.getStartDt());
+//			searchData.setEndTime(DateTimeUtils.formatDateToString(now.getTime(), "HH:mm:ss"));
+			now.add(Calendar.MINUTE, -30);
+			searchData.setStartTime(SDFFactory.TIME_COLON.format(now.getTime()));
+		}
+		
+		List<TypeCondition> conditions = new ArrayList<TypeCondition>();
+
+		// Add filter conditions
+		if (StringUtils.isNotEmpty(searchData.getId())) {
+			conditions.add(new TypeCondition("id", "a.id = :id", searchData.getId()));
+		}
+		if (searchData.getIds() != null && searchData.getIds().size() > 0) {
+			conditions.add(new TypeCondition("ids", "a.id in (:ids)", searchData.getIds()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getChannel())) {
+			conditions.add(new TypeCondition("channel", "a.channel = :channel", searchData.getChannel()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getStartDt())) {
+			conditions.add(new TypeCondition("startRecordDt", "a.recordDt >= :startRecordDt", searchData.getStartDt().replaceAll("-", "").replaceAll("/", "")));
+		}
+		if (StringUtils.isNotEmpty(searchData.getEndDt())) {
+			conditions.add(new TypeCondition("endRecordDt", "a.recordDt <= :endRecordDt", searchData.getEndDt().replaceAll("-", "").replaceAll("/", "")));
+		}
+		if (StringUtils.isNotEmpty(searchData.getMchNo())) {
+			conditions.add(new TypeCondition("mchNo", "a.mchNo = :mchNo", searchData.getMchNo()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getErrCode())) {
+			conditions.add(new TypeCondition("errCode", "a.errCode = :errCode", searchData.getErrCode()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getErrMsg())) {
+			conditions.add(new TypeCondition("errMsg", "a.errMsg like :errMsg", "%" + searchData.getErrMsg() + "%"));
+		}
+		if (StringUtils.isNotEmpty(searchData.getAccIdCard())) {
+			conditions.add(new TypeCondition("accIdCard", "a.accIdCard = :accIdCard", searchData.getAccIdCard()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getAccCardNo())) {
+			conditions.add(new TypeCondition("accCardNo", "a.accCardNo = :accCardNo", searchData.getAccCardNo()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getPayCardNo())) {
+			conditions.add(new TypeCondition("payCardNo", "a.payCardNo = :payCardNo", searchData.getPayCardNo()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getTradeNo())) {
+			conditions.add(new TypeCondition("tradeNo", "a.tradeNo = :tradeNo", searchData.getTradeNo()));
+		}
+		if (StringUtils.isNotEmpty(searchData.getStartTime())) {
+			conditions.add(new TypeCondition("startTime", "a.receiveDtime >= :startTime", searchData.getStartTime().replaceAll(":", "")));
+		}
+		if (StringUtils.isNotEmpty(searchData.getEndTime())) {
+			conditions.add(new TypeCondition("endTime", "a.receiveDtime <= :endTime", searchData.getEndTime().replaceAll(":", "")));
+		}
+		// Append conditions
+		if (conditions != null && conditions.size() > 0) {
+			sql.append(" where ").append(this.joinConditions(conditions, " and "));
+		}
+
+		if (StringUtils.isEmpty(searchData.getOrderString())) {
+			searchData.setOrderString("createDate desc");
+		}
+
+		// Create query statements
+		TypedQuery<DownTradeLog> query = this.getEntityManager().createQuery(sql.toString() + " order by a." + searchData.getOrderString(), DownTradeLog.class);
+		TypedQuery<Long> totalQuery = this.getEntityManager().createQuery("select count(a.id) " + sql.toString(), Long.class);
+
+		// Append conditions' variables
+		this.addParameters(query, conditions);
+		this.addParameters(totalQuery, conditions);
+
+		// Send back returns
+		return this.getPagedList(totalQuery, query, searchData);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
+	public int clearByExpiredDate(String expiredDate) {
+		String cleanSql = "delete from DownTradeLog a where a.recordDt <= :expiredDate";
+		return this.getEntityManager().createQuery(cleanSql).setParameter("expiredDate", expiredDate).executeUpdate();
+	}
+
+ }

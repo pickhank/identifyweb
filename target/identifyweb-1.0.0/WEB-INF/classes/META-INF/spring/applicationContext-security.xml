@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/security 
+        http://www.springframework.org/schema/security/spring-security-4.0.xsd">
+
+	<authentication-manager alias="authenticationManager">
+	    <authentication-provider>
+	        <user-service>
+	            <user name="system" password="system" authorities="ROLE_USER,super_system_role"/>
+	            <user name="bob" password="bobspassword" authorities="ROLE_USER" />
+	        </user-service>
+	    </authentication-provider>
+	    <authentication-provider user-service-ref="userDetailsService">
+	        <password-encoder ref="encoder" />
+	    </authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="encoder" class="com.woodare.core.security.CustomPasswordEncoder"></beans:bean>
+	
+    <!-- need this to fix a bug in spring security 3.0.6 that causes an NPE when logging out -->
+    <beans:bean id="myLogoutSuccessHandler" class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
+        <beans:property name="defaultTargetUrl" value="/"/>
+        <beans:property name="alwaysUseDefaultTargetUrl" value="true"/>
+    </beans:bean>
+
+ 	<beans:bean id="authenticationEntryPoint" class="com.woodare.core.security.AjaxAwareAuthenticationEntryPoint">
+	    <beans:constructor-arg name="loginUrl" value="/system/user/login"/>
+	</beans:bean>
+
+	<authentication-manager id="reautoAuthenticationManager">
+		<authentication-provider ref="rememberMeAuthenticationProvider">
+		</authentication-provider>
+	</authentication-manager>
+	
+	<beans:bean id="loginFilter" class="com.woodare.core.security.MyUsernamePasswordAuthenticationFilter">
+		<beans:property name="authenticationManager" ref="authenticationManager" ></beans:property>
+	    <beans:property name="authenticationFailureHandler" ref="customAuthenticationFailureHandler"></beans:property>
+	    <beans:property name="authenticationSuccessHandler" ref="customAuthenticationSuccessHandler"></beans:property>
+		<beans:property name="rememberMeServices" ref="tokenRememberMeServices"></beans:property>
+	</beans:bean>
+	
+	<!-- bean 2: set the default failure url here -->
+	<beans:bean id="customAuthenticationFailureHandler" class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler" >
+	     <beans:property name="defaultFailureUrl" value="/system/user/login?loginError=true"></beans:property>
+    </beans:bean>
+	
+	 <!-- bean 3: set the default target url here -->
+	<beans:bean id="customAuthenticationSuccessHandler" class="org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler" >
+	     <beans:property name="defaultTargetUrl" value="/"></beans:property>
+	</beans:bean>
+	
+	<beans:bean id="rememberMeFilter" class="org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter">
+		<beans:constructor-arg name="rememberMeServices" ref="tokenRememberMeServices" />
+		<beans:constructor-arg name="authenticationManager" ref="reautoAuthenticationManager" />
+	</beans:bean>
+	
+	<beans:bean id="tokenRememberMeServices" class="org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices">
+		<beans:constructor-arg name="key" value="springRocks"/>
+		<beans:constructor-arg name="userDetailsService" ref="userDetailsService" />
+	</beans:bean>
+
+	<beans:bean id="rememberMeAuthenticationProvider" class="org.springframework.security.authentication.RememberMeAuthenticationProvider">
+		<beans:constructor-arg name="key" value="springRocks"/>
+	</beans:bean>
+	
+	<http pattern="/ws/**" security="none" create-session="never" />
+	<http pattern="/resources/**" security="none" create-session="never" />
+	<http pattern="/uploads/**" security="none" create-session="never" />
+	<http pattern="/pay/**" security="none" create-session="never" />
+	<http pattern="/transmit/**" security="none" create-session="never" />
+	<http pattern="/directpay/**" security="none" create-session="never" />
+	<http pattern="/creditpay/**" security="none" create-session="never" />
+	<http pattern="/debitpay/**" security="none" create-session="never" />
+	<http pattern="/down/bill/**" security="none" create-session="never" />
+	<http pattern="/user/register" security="none" create-session="never" />
+	<http pattern="/user/relogin" security="none" create-session="never" />
+	<http pattern="/qrcode" security="none" create-session="never" />
+	<http pattern="/callback/**" security="none" create-session="never" />
+	
+	
+	<http auto-config="false" entry-point-ref="authenticationEntryPoint"  use-expressions="false">
+		<headers>
+			<frame-options policy="SAMEORIGIN"/>
+		</headers>
+		
+		<intercept-url pattern="/api/test/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/api/app/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/api/merchant/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/resetPass/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/common/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/regcode/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/qrcode/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/system/user/login" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/system/user/logout" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/wx/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/ali/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/mf/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/trans/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/content/" access="ROLE_USER,ROLE_ADMIN" />
+		<intercept-url pattern="/content/**" access="ROLE_USER,ROLE_ADMIN" />
+		<intercept-url pattern="/agent/**" access="ROLE_USER,ROLE_ADMIN" />
+		<intercept-url pattern="/" access="ROLE_USER,ROLE_ADMIN" />
+		<intercept-url pattern="/working" access="ROLE_USER,ROLE_ADMIN" />
+		<intercept-url pattern="/**" access="ROLE_ADMIN" />
+		
+        <!--always-use-default-target="true"-->
+
+        <!-- need success handler to fix a bug in spring security 3.0.6 that causes an NPE when logging out -->
+        <logout logout-url="/system/user/logout" invalidate-session="true" logout-success-url="/system/user/login" />
+        
+		<custom-filter position="FORM_LOGIN_FILTER" ref="loginFilter" />
+		<custom-filter position="REMEMBER_ME_FILTER" ref="rememberMeFilter" />
+		
+		<csrf disabled="true" />
+    </http>
+</beans:beans>

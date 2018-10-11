@@ -1,0 +1,82 @@
+#!/bin/bash
+
+#java environment
+JAVA_HOME=/opt/jdk1.7.0_80
+export MAVEN_HOME=/opt/apache-maven-3.5.3
+#MAVEN_HOME=/usr/share/apache-maven
+export MAVEN_HOME
+export JAVA_HOME
+export CLASSPATH=.:${JAVA_HOME}/jre/lib/rt.jar:${JAVA_HOME}/lib/dt.jar:${JAVA_HOME}/lib/tools.jar
+export PATH=${JAVA_HOME}/bin:${MAVEN_HOME}/bin:$PATH
+
+TOMCAT_HOME_A="/opt/apache-tomcat-master"
+TOMCAT_HOME_B="/opt/apache-tomcat-slave"
+
+TOMCAT_HOME=${TOMCAT_HOME_A}
+MVN_MODE=prod
+
+_chgTomcat() 
+{
+    [ "$1" == "A" ] && TOMCAT_HOME=${TOMCAT_HOME_A} && MVN_MODE="prod"
+    [ "$1" == "B" ] && TOMCAT_HOME=${TOMCAT_HOME_B} && MVN_MODE="test"
+    export TOMCAT_HOME
+    export MVN_MODE
+    export THOME_LOG_FILE=${TOMCAT_HOME}/logs/catalina
+	alias cdb="cd ${TOMCAT_HOME}"
+	alias cdt="cd ${TOMCAT_HOME}/logs"
+    echo "Succ change, Active Tomcat: ${TOMCAT_HOME}"
+}
+_chgServer()
+{
+    if [ "$1" == "A" ]
+    then
+        rm -rf /etc/httpd/conf.sites.enabled/api.intrackcom.com-*
+        ln -s /etc/httpd/conf.sites.available/api.intrackcom.com-master.conf /etc/httpd/conf.sites.enabled/
+    else
+        rm -rf /etc/httpd/conf.sites.enabled/api.intrackcom.com-*
+        ln -s /etc/httpd/conf.sites.available/api.intrackcom.com-slave.conf /etc/httpd/conf.sites.enabled/
+    fi
+
+    ls /etc/httpd/conf.sites.enabled/
+}
+
+echo "Welcome, Active Tomcat: ${TOMCAT_HOME}"
+echo "Use 'sw A|B' to switch Tomcat Workspace"
+echo "Use 'swd A|B' to switch Server, require 'service httpd reload'"
+alias sw="_chgTomcat"
+alias swd="_chgServer"
+sw A
+
+alias cdl="cd /etc/httpd/logs"
+alias cdw="cd /root/apps/DebitPayWeb"
+#alias vi="vim"
+
+_taillog()
+{
+   day=`date +%Y-%m-%d`
+   tail -f  ${THOME_LOG_FILE}.$day.out;
+}
+
+alias tlog="_taillog"
+
+_catlogx()
+{
+   XX=$1
+   Days=$2
+   [ "$Days" == "" ] && Days=0
+
+   day=$(date +%Y-%m-%d -d -${Days}day)
+   cat ${THOME_LOG_FILE}.$day.out |grep "$XX"
+}
+
+alias clog="_catlogx"
+
+_vilogx()
+{
+   Days=$1
+   [ "$Days" == "" ] && Days=0
+
+   day=$(date +%Y-%m-%d -d -${Days}day)
+   vim ${THOME_LOG_FILE}.$day.out
+}
+alias vlog="_vilogx"
