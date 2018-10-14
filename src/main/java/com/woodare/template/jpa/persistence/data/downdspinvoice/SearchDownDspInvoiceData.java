@@ -66,6 +66,16 @@ public class SearchDownDspInvoiceData extends AbstractPageData {
 
 	private Boolean withDspModeFlg;
 
+	private String transDate;
+
+	public String getTransDate() {
+		return transDate;
+	}
+
+	public void setTransDate(String transDate) {
+		this.transDate = transDate;
+	}
+
 	/**
 	 * @return the withDspModeFlg
 	 */

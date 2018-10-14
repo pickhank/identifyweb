@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.woodare.template.jpa.persistence.persistence.ISummaryDAO;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -68,6 +69,9 @@ public class AdminDownDspInvoiceController extends BaseController {
 
 	@Autowired
 	private IDownDspInvoiceDAO downNoCardInvoiceDAO;
+
+	@Autowired
+	private ISummaryDAO iSummaryDAO;
 
 	@Transactional(propagation = Propagation.NEVER)
 	@RequestMapping({ "/sum", "/exportSum" })

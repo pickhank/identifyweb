@@ -12,8 +12,13 @@
  *****************************************************************************/
 package com.woodare.template.component.schedule;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
+import com.woodare.template.jpa.persistence.data.downdspinvoice.DownDspInvoiceSumData;
+import com.woodare.template.jpa.persistence.data.downdspinvoice.SearchDownDspInvoiceData;
+import com.woodare.template.jpa.persistence.persistence.ISummaryDAO;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,6 +48,9 @@ public class DownMerchantSettleSchedule {
 	@Autowired
 	private IDownMerchantBalanceService downMerchantBalanceService;
 
+	@Autowired
+	private ISummaryDAO summaryDAO;
+
 	/**
 	 * 每10s钟检查一次是否需要执行日终跑批任务
 	 */
@@ -69,4 +77,23 @@ public class DownMerchantSettleSchedule {
 			}
 		}
 	}
+	/**
+	 * 每天凌晨执行一次
+	 */
+	@Scheduled(cron = "0 0 0 * * ?")
+//	@Scheduled(fixedDelay = 5000, initialDelay = 30000)
+	public void xueTest(){
+		/*获取前一天的日期*/
+		Date yesterday = new Date(new Date().getTime() - 86400000L);
+		SearchDownDspInvoiceData searchData = new SearchDownDspInvoiceData();
+		/*对日期做格式化处理*/
+		searchData.setTransDate(new SimpleDateFormat("yyyy-MM-dd").format(yesterday).replaceAll("-",""));
+		int it = summaryDAO.sumSummary(searchData.getTransDate());
+		if(it > 0){
+			log.debug("成功");
+		}else {
+			log.debug("失败");
+		}
+	}
+
 }

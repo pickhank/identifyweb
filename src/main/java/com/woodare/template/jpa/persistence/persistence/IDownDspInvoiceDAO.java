@@ -47,4 +47,8 @@ public interface IDownDspInvoiceDAO extends ISimpleDAO<DownDspInvoice> {
 	List<DownDspInvoiceSumData> sumInvoice(SearchDownDspInvoiceData searchData);
 
 	List<DownDspInvoiceUpSumData> upSumInvoice(SearchDownDspInvoiceData searchData);
+
+//	int sumSummary(DownDspInvoiceSumData downDspInvoiceSumData);
+//
+//	List<DownDspInvoiceSumData> listInovice();
 }
