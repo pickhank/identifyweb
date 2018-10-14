@@ -10,6 +10,9 @@
 	<definition extends="box" name="/admin/downDspInvoice/sum">
 		<put-attribute name="body" value="/WEB-INF/views/admin/downDspInvoice/sum.jsp" />
 	</definition>
+	<definition extends="box" name="/admin/downDspInvoice/sumTwo">
+		<put-attribute name="body" value="/WEB-INF/views/admin/downDspInvoice/sumTwo.jsp" />
+	</definition>
 	<definition extends="box" name="/admin/downDspInvoice/upSum">
 		<put-attribute name="body" value="/WEB-INF/views/admin/downDspInvoice/upSum.jsp" />
 		<!-- <put-list-attribute name="scripts">

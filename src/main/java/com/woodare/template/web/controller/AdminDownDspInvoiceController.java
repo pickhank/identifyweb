@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.woodare.template.jpa.persistence.data.sumary.DownDsapInoviceHis;
 import com.woodare.template.jpa.persistence.persistence.ISummaryDAO;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,6 +91,25 @@ public class AdminDownDspInvoiceController extends BaseController {
 		mav.addObject("search", searchData);
 		return mav;
 	}
+
+	/**
+	 * 交易汇总
+	 * @param searchData
+	 * @return
+	 * @throws ControllerException
+	 */
+    @Transactional(propagation = Propagation.NEVER)
+    @RequestMapping(value = "sumTwo")
+    public ModelAndView sumTwo(SearchDownDspInvoiceViewData searchData) throws ControllerException {
+        formatSearchData(searchData);
+
+        List<DownDsapInoviceHis> items = iSummaryDAO.summary(searchData);
+
+        ModelAndView mav = new ModelAndView(getTemplate("/admin/downDspInvoice/sumTwo"));
+        mav.addObject("items", items);
+        mav.addObject("search", searchData);
+        return mav;
+    }
 
 	@Transactional(propagation = Propagation.NEVER)
 	@RequestMapping({ "/upSum", "/exportUpSum" })

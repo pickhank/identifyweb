@@ -14,12 +14,9 @@ package com.woodare.template.jpa.persistence.data.downdspinvoice;
 
 import java.math.BigDecimal;
 
-import com.woodare.core.base.AbstractBusiModel;
-import com.woodare.framework.annotation.EntityDescriptor;
 import com.woodare.framework.utils.CommonUtils;
 import com.woodare.template.jpa.model.data.EnumDspMode;
 
-import javax.persistence.Entity;
 
 /**
  * ClassName: DownDspInvoiceSumData
@@ -28,10 +25,7 @@ import javax.persistence.Entity;
  * @author Luke
  * @Date Sep 15, 2018
  */
-@Entity
-@EntityDescriptor(name = "交易汇总", category = "content")
-public class DownDspInvoiceSumData extends AbstractBusiModel {
-	private static final long serialVersionUID = 1560550373825532962L;
+public class DownDspInvoiceSumData {
 
 	/** 商户号 * */
 	private String mchNo;
@@ -62,16 +56,6 @@ public class DownDspInvoiceSumData extends AbstractBusiModel {
 
 	/** 平台返点分润 */
 	private BigDecimal xtraProfitAmt;
-
-	private String tans_date;
-
-	public String getTans_date() {
-		return tans_date;
-	}
-
-	public void setTans_date(String tans_date) {
-		this.tans_date = tans_date;
-	}
 
 	@SuppressWarnings("unchecked")
 	private static <T> T convert(Object o, Class<T> target) {

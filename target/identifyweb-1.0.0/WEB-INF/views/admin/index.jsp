@@ -14,6 +14,10 @@
 			<a class="zhyk-nav-link" data-href="<c:url value="/admin/downDspInvoice/sum"/>" onclick="openTabs(this);return false;">交易汇总(机构)</a>
 		</li>
 		<li>
+			<i class="fa fa-area-chart"></i>
+			<a class="zhyk-nav-link" data-href="<c:url value="/admin/downDspInvoice/sumTwo"/>" onclick="openTabs(this);return false;">交易汇总(统计)</a>
+		</li>
+		<li>
 			<i class="fa fa-money"></i>
 			<a class="zhyk-nav-link" data-href="<c:url value="/admin/downMerchantFundAccount/index"/>" onclick="openTabs(this);return false;">余额管理(机构)</a>
 		</li>

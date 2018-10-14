@@ -13,10 +13,9 @@
 package com.woodare.template.component.schedule;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
-import com.woodare.template.jpa.persistence.data.downdspinvoice.DownDspInvoiceSumData;
 import com.woodare.template.jpa.persistence.data.downdspinvoice.SearchDownDspInvoiceData;
 import com.woodare.template.jpa.persistence.persistence.ISummaryDAO;
 import org.apache.log4j.Logger;
@@ -84,11 +83,16 @@ public class DownMerchantSettleSchedule {
 //	@Scheduled(fixedDelay = 5000, initialDelay = 30000)
 	public void xueTest(){
 		/*获取前一天的日期*/
-		Date yesterday = new Date(new Date().getTime() - 86400000L);
+		Date yesterday = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(yesterday);
+		calendar.add(Calendar.DAY_OF_MONTH, -1);
+		yesterday = calendar.getTime();
 		SearchDownDspInvoiceData searchData = new SearchDownDspInvoiceData();
 		/*对日期做格式化处理*/
+		System.out.println(yesterday);
 		searchData.setTransDate(new SimpleDateFormat("yyyy-MM-dd").format(yesterday).replaceAll("-",""));
-		int it = summaryDAO.sumSummary(searchData.getTransDate());
+		int it = summaryDAO.sumSummary(searchData);
 		if(it > 0){
 			log.debug("成功");
 		}else {
@@ -97,3 +101,17 @@ public class DownMerchantSettleSchedule {
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
