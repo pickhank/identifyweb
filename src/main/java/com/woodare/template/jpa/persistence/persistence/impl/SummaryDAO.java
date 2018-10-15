@@ -33,16 +33,16 @@ public class SummaryDAO extends AbstractPagedDAO<DownDsapInoviceHis> implements 
         sb.append(" INSERT INTO down_dsap_inovice_his (id,create_date,update_date,agent_profit_amt,channel_fee_amt,count,dsp_mode,mch_fee_amt,mch_name,mch_no,");
         sb.append("profit_amt,trans_date,total_count,xtra_profit_amt)");
         sb.append(" SELECT m.* FROM(select a.id,a.create_date,a.update_date,");
-        sb.append("sum(case when a.status = '00' then a.agent_profit else 0 end) agent_profit_amt,");
-        sb.append("sum(case when a.status = '00' then a.channel_pay_fee else 0 end) channel_fee_amt,");
-        sb.append("sum(case when a.status = '00' then 1 else 0 end) `count`,");
+        sb.append("sum(case when a.status = '1' then a.agent_profit else 0 end) agent_profit_amt,");
+        sb.append("sum(case when a.status = '1' then a.channel_pay_fee else 0 end) channel_fee_amt,");
+        sb.append("sum(case when a.status = '1' then 1 else 0 end) count,");
         sb.append("a.dsp_mode,");
-        sb.append("sum(case when a.status = '00' then a.mch_pay_fee else 0 end) mch_fee_amt,");
+        sb.append("sum(case when a.status = '1' then a.mch_pay_fee else 0 end) mch_fee_amt,");
         sb.append("a.mch_name,a.mch_no,");
-        sb.append("sum(case when a.status = '00' then a.profit else 0 end) profit_amt,");
+        sb.append("sum(case when a.status = '1' then a.profit else 0 end) profit_amt,");
         sb.append("a.trans_date,");
         sb.append("count(a.id) total_count,");
-        sb.append("sum(case when a.status = '00' then a.xtra_profit else 0 end) xtra_profit_amt");
+        sb.append("sum(case when a.status = '1' then a.xtra_profit else 0 end) xtra_profit_amt");
         sb.append(" from down_dsp_invoice a WHERE trans_date = '" + searchData.getTransDate() + "' GROUP BY mch_no ORDER BY create_date) m");
 
         System.out.println(sb.toString());
@@ -93,6 +93,7 @@ public class SummaryDAO extends AbstractPagedDAO<DownDsapInoviceHis> implements 
         // Send back returns
         return this.getPagedList(totalQuery, query, searchData);
     }
+
 
 }
 

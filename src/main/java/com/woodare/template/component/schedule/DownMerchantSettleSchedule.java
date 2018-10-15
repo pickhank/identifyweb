@@ -86,18 +86,23 @@ public class DownMerchantSettleSchedule {
 		Date yesterday = new Date();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(yesterday);
-		calendar.add(Calendar.DAY_OF_MONTH, -1);
 		yesterday = calendar.getTime();
 		SearchDownDspInvoiceData searchData = new SearchDownDspInvoiceData();
 		/*对日期做格式化处理*/
 		System.out.println(yesterday);
 		searchData.setTransDate(new SimpleDateFormat("yyyy-MM-dd").format(yesterday).replaceAll("-",""));
-		int it = summaryDAO.sumSummary(searchData);
-		if(it > 0){
-			log.debug("成功");
-		}else {
-			log.debug("失败");
+		try {
+			int it = summaryDAO.sumSummary(searchData);
+			if(it > 0){
+				log.debug("插入成功");
+			}else {
+				log.debug("插入失败");
+			}
+		}catch (Exception e){
+			log.debug("插入异常");
 		}
+
+
 	}
 
 }

@@ -14,7 +14,7 @@
 			<a class="zhyk-nav-link" data-href="<c:url value="/admin/downDspInvoice/sum"/>" onclick="openTabs(this);return false;">交易汇总(机构)</a>
 		</li>
 		<li>
-			<i class="fa fa-area-chart"></i>
+			<i class="fa fa-line-chart"></i>
 			<a class="zhyk-nav-link" data-href="<c:url value="/admin/downDspInvoice/sumTwo"/>" onclick="openTabs(this);return false;">交易汇总(统计)</a>
 		</li>
 		<li>
@@ -35,7 +35,7 @@
 		</li>
 		<!-- 充值頁面 -->
 		<li>
-			<i class="fa fa-cny"></i>
+			<i class="fa fa-handshake-o"></i>
 			<a class="zhyk-nav-link" data-href="<c:url value="/admin/chargeDetail/index"/>" onclick="openTabs(this);return false;">充值管理</a>
 		</li>
 	</ul>
