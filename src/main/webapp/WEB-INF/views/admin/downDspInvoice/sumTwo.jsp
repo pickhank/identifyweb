@@ -87,7 +87,8 @@ table.list-wapper td.num {
 				<c:out value="${item.mchName}" />(<c:out value="${item.mchNo}" />)
 			</td>
 			<td>
-				<c:out value="${item.transDate}" />&nbsp;
+				<utils:dateFormat value="${item.transDate}"/>
+				<%--<utils:dateFormat value="${item.transDate}"/>--%>
 				<%--<fmt:formatDate value="${item.transDate}" pattern="yyyy/MM/dd HH:mm:ss"/>--%>
 				<%--<fmt:formatDate pattern="yyyy-MM-dd" value="${item.transDate}" />--%>
 			</td>

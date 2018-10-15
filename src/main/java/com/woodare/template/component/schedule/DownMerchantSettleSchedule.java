@@ -81,11 +81,12 @@ public class DownMerchantSettleSchedule {
 	 */
 	@Scheduled(cron = "0 0 0 * * ?")
 //	@Scheduled(fixedDelay = 5000, initialDelay = 30000)
-	public void xueTest(){
+	public void notifyBackup(){
 		/*获取前一天的日期*/
 		Date yesterday = new Date();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(yesterday);
+		calendar.add(Calendar.DATE,   -1);
 		yesterday = calendar.getTime();
 		SearchDownDspInvoiceData searchData = new SearchDownDspInvoiceData();
 		/*对日期做格式化处理*/
@@ -93,18 +94,10 @@ public class DownMerchantSettleSchedule {
 		searchData.setTransDate(new SimpleDateFormat("yyyy-MM-dd").format(yesterday).replaceAll("-",""));
 		try {
 			int it = summaryDAO.sumSummary(searchData);
-			if(it > 0){
-				log.debug("插入成功");
-			}else {
-				log.debug("插入失败");
-			}
 		}catch (Exception e){
-			log.debug("插入异常");
+			log.debug("插入失败,请检查");
 		}
-
-
 	}
-
 }
 
 

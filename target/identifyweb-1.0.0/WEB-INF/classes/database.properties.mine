@@ -1,7 +1,0 @@
-#Updated at Wed Jan 16 13:26:13 CST 2013
-#Wed Jan 16 13:26:13 CST 2013
-#dev
-database.driverClassName=com.mysql.jdbc.Driver
-database.url=jdbc\:mysql\://localhost\:3306/woo_identify?characterEncoding=utf-8
-database.username=root
-database.password=xue

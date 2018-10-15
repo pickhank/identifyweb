@@ -146,7 +146,6 @@ public class AdminDownDspInvoiceController extends BaseController {
 		mav.addObject("search", searchData);
 		mav.addObject("res", toViewData(items));
 		return mav;
-
 	}
 
 	@Transactional(propagation = Propagation.NEVER)

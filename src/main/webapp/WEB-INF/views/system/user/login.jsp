@@ -11,7 +11,7 @@ String resourceUrl = com.woodare.framework.utils.SysProperties.getInstance().get
 <head>
 <script>
 	if (parent != window) {
-		parent.location.reload()
+		parent.location.reload();
 	}
 </script>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
