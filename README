@@ -45,7 +45,6 @@ CREATE UNIQUE INDEX uni_merchant_product ON down_merchant_product (mch_no, produ
 		mvn -Pprod clean package
 	then, get war files from the folder of 'target/'.
 	
-	
 6. backup &restore database
 	mysqldump -R --default-character-set=utf8mb4 -uidentify -p woo_identify > woo_identify.sql
 	mysql --default-character-set=utf8mb4 -uidentify -p woo_identify < woo_identify.sql
