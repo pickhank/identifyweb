@@ -1,50 +1,51 @@
-Memo
-# 安装Mysql数据库
-mysql： mysql  root  / Love1234!@
+备忘录
+＃安装Mysql数据库
+mysql：mysql root / Love1234！@
 
-0. Installation necessary library
-    #### Goto customlibs folder, to execute below commands firstly:
-	mvn install:install-file -Dfile=jcaptcha-1.0-all.jar -DgroupId=local -DartifactId=jcaptcha -Dversion=1.0-all -Dpackaging=jar
-	mvn install:install-file -Dfile=thumbnailator-0.4.5-all.jar -DgroupId=local -DartifactId=thumbnailator -Dversion=0.4.5-all -Dpackaging=jar
-	mvn install:install-file -Dfile=json-1.0.0.jar -DgroupId=local -DartifactId=json -Dversion=1.0.0 -Dpackaging=jar
-	mvn install:install-file -Dfile=patchca-0.5.0.jar -DgroupId=local -DartifactId=patchca -Dversion=0.5.0 -Dpackaging=jar
-	mvn install:install-file -Dfile=woo-jpa-2.0.0.jar -DgroupId=com.woodare.plugin -DartifactId=woo-jpa -Dversion=2.0.0 -Dpackaging=jar
-	mvn install:install-file -Dfile=sms-http.jar -DgroupId=local -DartifactId=sms-http -Dversion=1.0.0 -Dpackaging=jar
-	mvn install:install-file -Dfile=cpcn-dsp-api-1.0.0.6.jar -DgroupId=local -DartifactId=cpcn-dsp-api -Dversion=1.0.0.6 -Dpackaging=jar
+0.安装必要的库
+    ####转到customlibs文件夹，首先执行以下命令：
+	mvn install：install-file -Dfile = jcaptcha-1.0-all.jar -DgroupId = local -DartifactId = jcaptcha -Dversion = 1.0-all -Dpackaging = jar
+	mvn install：install-file -Dfile = thumbnailator-0.4.5-all.jar -DgroupId = local -DartifactId = thumbnailator -Dversion = 0.4.5-all -Dpackaging = jar
+	mvn install：install-file -Dfile = json-1.0.0.jar -DgroupId = local -DartifactId = json -Dversion = 1.0.0 -Dpackaging = jar
+	mvn install：install-file -Dfile = patchca-0.5.0.jar -DgroupId = local -DartifactId = patchca -Dversion = 0.5.0 -Dpackaging = jar
+	mvn install：install-file -Dfile = woo-jpa-2.0.0.jar -DgroupId = com.woodare.plugin -DartifactId = woo-jpa -Dversion = 2.0.0 -Dpackaging = jar
+	mvn install：install-file -Dfile = sms-http.jar -DgroupId = local -DartifactId = sms-http -Dversion = 1.0.0 -Dpackaging = jar
+	mvn install：install-file -Dfile = cpcn-dsp-api-1.0.0.6.jar -DgroupId = local -DartifactId = cpcn-dsp-api -Dversion = 1.0.0.6 -Dpackaging = jar
 			
-1. Create database & Grant 
-	#CREATE DATABASE `woo_identify` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-	CREATE DATABASE `woo_identify` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-	GRANT ALL PRIVILEGES ON woo_identify.* TO 'identify'@'localhost' IDENTIFIED BY 'Love1234!@';
+1.创建数据库和授权 
+	#CREATE DATABASE`woo_identify`默认字符集utf8 COLLATE utf8_general_ci;
+	创建数据库`woo_identify`默认字符集utf8mb4 COLLATE utf8mb4_unicode_ci;
+	在woo_identify上授予所有特权。*'识别'@'localhost'通过'Love1234确认！@';
 	
-2. after defined your model, with the following command to generate codes
-	on logical-service project run Maven commands to generate vo codes & jpa impl & jpa interface file.
-		mvn woo-jpa:generate
-	Before you use this command, to run 'mvn clean install' on wooplugin project firstly.
+2.定义完模型后，用以下命令生成代码
+	在逻辑服务项目上运行Maven命令以生成vo代码和jpa impl＆jpa接口文件。
+		mvn woo-jpa：生成
+	在使用此命令之前，首先在wooplugin项目上运行'mvn clean install'。
 
-3. run projects by deploy or start [web] project
+3.通过部署或启动[web]项目来运行项目
 
-# 建库后，添加必要的索引字段
-CREATE UNIQUE INDEX uni_invoice_mch_tradeno ON down_no_card_invoice (mch_no, trade_no);
-CREATE UNIQUE INDEX uni_invoice_transno ON down_no_card_invoice (trans_no);
-CREATE INDEX idx_inv_transdate ON down_no_card_invoice (trans_date);
+＃建库后，添加必要的索引字段
+CREATE UNIQUE INDEX uni_invoice_mch_tradeno ON down_no_card_invoice（mch_no，trade_no）;
+CREATE UNIQUE INDEX uni_invoice_transno ON down_no_card_invoice（trans_no）;
+CREATE INDEX idx_inv_transdate ON down_no_card_invoice（trans_date）;
 
-CREATE UNIQUE INDEX uni_deposit_mch_orderno ON down_merchant_deposit (mch_no, trade_no);
-CREATE UNIQUE INDEX uni_deposit_tradeno ON down_merchant_deposit (trans_no);
-CREATE INDEX idx_deposit_transdate ON down_merchant_deposit (trans_date);
+CREATE UNIQUE INDEX uni_deposit_mch_orderno ON down_merchant_deposit（mch_no，trade_no）;
+CREATE UNIQUE INDEX uni_deposit_tradeno ON down_merchant_deposit（trans_no）;
+CREATE INDEX idx_deposit_transdate ON down_merchant_deposit（trans_date）;
 
-CREATE UNIQUE INDEX uni_merchant_product ON down_merchant_product (mch_no, product_type);
+CREATE UNIQUE INDEX uni_merchant_product ON down_merchant_product（mch_no，product_type）;
 
-4. there are 3 kinds configuration in the folder [/src/main/environment/]
+4.文件夹中有3种配置[/ src / main / environment /]
 		dev \ prod \ test
-	files:
+	文件：
 		database.properties
 		system.proterties
 
-5. when to deploy by production mode with run:
-		mvn -Pprod clean package
-	then, get war files from the folder of 'target/'.
+5.何时按生产模式部署运行：
+		mvn -Pprod清洁包
+	然后，从'target /'文件夹中获取war文件。
 	
-6. backup &restore database
-	mysqldump -R --default-character-set=utf8mb4 -uidentify -p woo_identify > woo_identify.sql
-	mysql --default-character-set=utf8mb4 -uidentify -p woo_identify < woo_identify.sql
+	
+6.备份和恢复数据库
+	mysqldump -R --default-character-set = utf8mb4 -uidentify -p woo_identify> woo_identify.sql
+	mysql --default-character-set = utf8mb4 -uidentify -p woo_identify <woo_identify.sql
