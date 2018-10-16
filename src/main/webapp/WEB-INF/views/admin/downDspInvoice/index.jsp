@@ -6,9 +6,9 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <c:if test="${not empty error}">
 	<script>
-	$(function(){
-		alert("${error}");
-	});
+        $(function(){
+            alert("${error}");
+        });
 	</script>
 </c:if>
 <form class="search-form clear" action="<c:url value="/admin/downDspInvoice/index" />" method="post" style="min-height: 64px;">
@@ -20,12 +20,12 @@
 		<label for="mchNo">机构号：</label>
 		<input type="text" class="input-box search-input-box" placeholder="商户号" name="mchNo" value="${search.mchNo}"></input>
 	</div>
-	
+
 	<div class="ms-col-fix-100 clear">
 		<label for="dspMode">交易模式：</label>
 		<utils:enum key="EnumDspMode" name="dspMode" cssName="input-box search-input-box" value="${search.dspMode}"></utils:enum>
 	</div>
-	
+
 	<div class="ms-col-fix-100 clear">
 		<label for="transNo">平台流水号：</label>
 		<input type="text" class="input-box search-input-box" placeholder="流水号" name="transNo" value="${search.transNo}"></input>
@@ -60,16 +60,16 @@
 	</div>
 	<div class="ms-col-fix-100 clear">
 		<label for="startDate" class="custom-d-cate">From：</label>
-		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="开始时间" name="startDate" value="<fmt:formatDate value="${search.startDate}" pattern="yyyy/MM/dd"/>"></input>
+		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="开始时间" name="startDate" value="<fmt:formatDate value="${search.startDate}" pattern="yyyy-MM-dd"/>">
 	</div>
 	<div class="ms-col-fix-100 clear">
 		<label for="endDate" class="custom-d-cate">To：</label>
-		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="结束时间" name="endDate" value="<fmt:formatDate value="${search.endDate}" pattern="yyyy/MM/dd"/>"></input>
+		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="结束时间" name="endDate" value="<fmt:formatDate value="${search.endDate}" pattern="yyyy-MM-dd"/>">
 		<script>
-			$(".date-picker").datepicker($.datepicker.regional[ "zh-CN" ]);
-			$("select[name='dateCate']").change(function(){
-				$(".custom-d-cate").css("visibility", ($(this).val() == 'CUSTOM' ? "visible" : "hidden"));
-			}).change();
+            $(".date-picker").datepicker($.datepicker.regional[ "zh-CN" ]);
+            $("select[name='dateCate']").change(function(){
+                $(".custom-d-cate").css("visibility", ($(this).val() == 'CUSTOM' ? "visible" : "hidden"));
+            }).change();
 		</script>
 	</div>
 	<div class="ms-col-fix-100 clear" style="width: 400px;">
@@ -78,15 +78,15 @@
 		<span style="float:left;">~</span>
 		<input type="text" class="input-box search-input-box datetime-picker " placeholder="结束时间" name="endTime" value="${search.endTime}"></input>
 		<script>
-			$('.datetime-picker').timepicker({ 'timeFormat': 'H:i:s' });
+            $('.datetime-picker').timepicker({ 'timeFormat': 'H:i:s' });
 		</script>
 	</div>
-		
+
 	<div class="ms-col-fix-100 clear">
-	<label for="statusDesc">状态描述：</label>
-	<input type="text" class="input-box search-input-box" placeholder="状态描述" name="statusDesc" value="${search.statusDesc}"></input>
+		<label for="statusDesc">状态描述：</label>
+		<input type="text" class="input-box search-input-box" placeholder="状态描述" name="statusDesc" value="${search.statusDesc}"></input>
 	</div>
-	
+
 	<div class="ms-col-fix-300 clear" >
 		<utils:hideColumn defaultVal="渠道商户,手续费（元）,代理分润（元）,平台分润（元）" />
 	</div>
@@ -118,13 +118,13 @@
 		<td>状态时间</td>
 		<td>操作</td>
 	</tr>
-	
+
 	<c:set var="rowNum" value="0" />
-	
+
 	<c:set var="mchPayFee" value="0" />
 	<c:set var="agentProfit" value="0" />
 	<c:set var="profit" value="0" />
-	
+
 	<c:forEach var="item" items="${res.items}" varStatus="status">
 		<tr class="list-item">
 			<td><c:out value="${item.mchName}" />(<c:out value="${item.mchNo}" />)</td>
@@ -157,15 +157,15 @@
 			<td>
 				<a href="<c:url value="/admin/downDspInvoice/detail?id=${item.id}" />" class="choose-link operate-detail">详情</a>
 			</td>
-			
-			
+
+
 			<c:set var="rowNum" value="${rowNum + 1 }" />
 			<c:set var="mchPayFee" value="${mchPayFee + item.mchPayFee }" />
 			<c:set var="agentProfit" value="${agentProfit + item.agentProfit }" />
 			<c:set var="profit" value="${profit + item.profit }" />
 		</tr>
 	</c:forEach>
-	
+
 	<c:if test="${rowNum gt 0 }">
 		<tr class="list-item" style="font-weight: bold;">
 			<td>&nbsp;</td>

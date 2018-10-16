@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition extends="empty" name="/api/test/index">
+		<put-attribute name="body" value="/WEB-INF/views/api/test/index.jsp" />
+	</definition>
+	<definition extends="empty" name="/api/test/common">
+		<put-attribute name="body" value="/WEB-INF/views/api/test/common.jsp" />
+	</definition>
+	<definition extends="empty" name="/api/test/dsp">
+		<put-attribute name="body" value="/WEB-INF/views/api/test/dsp.jsp" />
+	</definition>
+	<definition extends="empty" name="/api/test/down">
+		<put-attribute name="body" value="/WEB-INF/views/api/test/down.jsp" />
+	</definition>
+</tiles-definitions>
+

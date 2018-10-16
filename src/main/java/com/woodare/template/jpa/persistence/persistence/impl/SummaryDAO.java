@@ -1,8 +1,8 @@
 package com.woodare.template.jpa.persistence.persistence.impl;
 
 import com.woodare.framework.persistence.service.impl.AbstractPagedDAO;
+import com.woodare.template.jpa.model.DownDsapInoviceHis;
 import com.woodare.template.jpa.persistence.data.downdspinvoice.SearchDownDspInvoiceData;
-import com.woodare.template.jpa.persistence.data.sumary.DownDsapInoviceHis;
 import com.woodare.template.jpa.persistence.persistence.ISummaryDAO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -67,21 +67,29 @@ public class SummaryDAO extends AbstractPagedDAO<DownDsapInoviceHis> implements 
         if (searchData.getIds() != null && searchData.getIds().size() > 0) {
             conditions.add(new TypeCondition("ids", "a.id in (:ids)", searchData.getIds()));
         }
+
         // change the key
         if (StringUtils.isNotEmpty(searchData.getKeywords())) {
             conditions.add(new TypeCondition("keywords", "(a.mchName like :keywords)", "%" + searchData.getKeywords() + "%"));
         }
-        // TODO: add more conditionsd
+
+        // 日期查询问题
+        if (searchData.getStartDate() != null) {
+            conditions.add(new TypeCondition("startDate", "a.createDate >= :startDate", searchData.getStartDate()));
+        }
+        if (searchData.getEndDate() != null) {
+            conditions.add(new TypeCondition("endDate", "a.createDate <= :endDate", searchData.getEndDate()));
+        }
 
         // Append conditions
         if (conditions != null && conditions.size() > 0) {
             sql.append(" where ").append(this.joinConditions(conditions, " and "));
         }
 
+
         if (true) {
             searchData.setOrderString("createDate desc");
         }
-
         // Create query statements
         TypedQuery<DownDsapInoviceHis> query = this.getEntityManager().createQuery(sql.toString(), DownDsapInoviceHis.class);
         TypedQuery<Long> totalQuery = this.getEntityManager().createQuery("select count(a.id) " + sql.toString(), Long.class);
@@ -89,7 +97,6 @@ public class SummaryDAO extends AbstractPagedDAO<DownDsapInoviceHis> implements 
         // Append conditions' variables
         this.addParameters(query, conditions);
         this.addParameters(totalQuery, conditions);
-
         // Send back returns
         return this.getPagedList(totalQuery, query, searchData);
     }

@@ -23,7 +23,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.woodare.template.jpa.persistence.data.sumary.DownDsapInoviceHis;
+import com.woodare.template.jpa.model.DownDsapInoviceHis;
 import com.woodare.template.jpa.persistence.persistence.ISummaryDAO;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

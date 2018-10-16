@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+<tiles-definitions>
+	<definition extends="box" name="/admin/recon/index">
+		<put-attribute name="body" value="/WEB-INF/views/admin/recon/index.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/recon/add">
+		<put-attribute name="body" value="/WEB-INF/views/admin/recon/add.jsp" />
+	</definition>
+	<definition extends="box" name="/admin/recon/export">
+		<put-attribute name="body" value="/WEB-INF/views/admin/recon/export.jsp" />
+	</definition>
+</tiles-definitions>

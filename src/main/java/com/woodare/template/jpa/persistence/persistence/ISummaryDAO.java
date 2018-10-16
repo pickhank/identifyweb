@@ -1,10 +1,11 @@
 package com.woodare.template.jpa.persistence.persistence;
 
 import com.woodare.framework.persistence.service.ISimpleDAO;
+import com.woodare.template.jpa.model.DownDsapInoviceHis;
 import com.woodare.template.jpa.persistence.data.downdspinvoice.SearchDownDspInvoiceData;
-import com.woodare.template.jpa.persistence.data.sumary.DownDsapInoviceHis;
 
 import java.util.List;
+
 
 public interface ISummaryDAO extends ISimpleDAO<DownDsapInoviceHis> {
 
