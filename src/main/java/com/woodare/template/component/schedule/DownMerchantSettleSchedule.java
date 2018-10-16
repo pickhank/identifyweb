@@ -22,6 +22,8 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.woodare.core.util.SDFFactory;
 import com.woodare.framework.utils.SysProperties;
@@ -54,11 +56,11 @@ public class DownMerchantSettleSchedule {
 	 * 每10s钟检查一次是否需要执行日终跑批任务
 	 */
 	@Scheduled(fixedDelay = 10000, initialDelay = 30000)
-	public void notifyRecord() {
+	public void balanceSettleWatcher() {
 		boolean runnning = SysProperties.getInstance().getBooleanProperty("run.timer.runbatch", true);
 		if (runnning) {
 			DownMerchantData merc = DownMerchants.getByCode("A0001");
-			if(merc == null) {
+			if (merc == null) {
 				return;
 			}
 			Date startTime = new Date();
@@ -76,40 +78,83 @@ public class DownMerchantSettleSchedule {
 			}
 		}
 	}
+
 	/**
 	 * 每天凌晨执行一次
 	 */
-	@Scheduled(cron = "0 0 0 * * ?")
+	 @Scheduled(cron = "0 0 0 * * ?")
 //	@Scheduled(fixedDelay = 5000, initialDelay = 30000)
-	public void notifyBackup(){
-		/*获取前一天的日期*/
+	public void xueTest() {
+		/* 获取前一天的日期 */
 		Date yesterday = new Date();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(yesterday);
-		calendar.add(Calendar.DATE,   -1);
 		yesterday = calendar.getTime();
 		SearchDownDspInvoiceData searchData = new SearchDownDspInvoiceData();
-		/*对日期做格式化处理*/
+		/* 对日期做格式化处理 */
 		System.out.println(yesterday);
-		searchData.setTransDate(new SimpleDateFormat("yyyy-MM-dd").format(yesterday).replaceAll("-",""));
+		searchData.setTransDate(new SimpleDateFormat("yyyy-MM-dd").format(yesterday).replaceAll("-", ""));
 		try {
 			int it = summaryDAO.sumSummary(searchData);
-		}catch (Exception e){
-			log.debug("插入失败,请检查");
+		} catch (Exception e) {
+			log.debug("插入异常");
+		}
+	}
+
+	/**
+	 * TODO: 定时生成隔日汇总统计数据，未加入定时任务内
+	 */
+	// @Scheduled(fixedDelay = 30*60*1000, initialDelay = 30000)
+	public void scheduleGenerateSummary() {
+		// 检测批量处理开关是否已打开
+		boolean runnning = SysProperties.getInstance().getBooleanProperty("run.timer.runbatch", true);
+		if (runnning) {
+			// 获取前一天的日期
+			Calendar calendar = Calendar.getInstance();
+			calendar.add(Calendar.DATE, -1);
+			Date yesterday = calendar.getTime();
+			String transDate = SDFFactory.DATE.format(yesterday);
+
+			resetSummaryByTransDate(transDate);
+		}
+	}
+
+	/**
+	 * TODO:按日期生成当日统计数据（独立的函数封装，以便于在页面调用时，可以复用此处逻辑）
+	 * 
+	 * 注意事项：
+	 * 		1. 打印log需要注意使用方式
+	 * 		2. 多观摩原有代码，一般工具类有现成的封装尽量使用
+	 * 		3. 类似定时任务这种上传到SVN都需要是面向生产参数配置使用的，不要过于随意，需要做好代码隔离或使用配置参数分离下
+	 * 
+	 * @descpription 
+	 * @param transDate
+	 */
+	@Transactional(propagation = Propagation.REQUIRED)
+	public void resetSummaryByTransDate(String transDate) {
+		long startTime = new Date().getTime();
+
+		int updateRows = -1;
+		try {
+			log.info("ResetSummaryByDateStart[" + startTime + "], TransDate[" + transDate + "]");
+
+			// TODO: 薛菘梩， 需重新梳理逻辑
+			// 1. 判断是否存在历史统计，进行数据删除
+
+
+			// 2. 统计新数据
+			SearchDownDspInvoiceData searchData = new SearchDownDspInvoiceData();
+			searchData.setTransDate(transDate);
+
+			updateRows = summaryDAO.sumSummary(searchData);
+		}
+		// 处理异常打印
+		catch (Exception e) {
+			log.error("ResetSummaryByDateErr[" + startTime + "]" + e.getMessage(), e);
+		}
+		// 记录执行时间与条数
+		finally {
+			log.info("ResetSummaryByDateEnd[" + startTime + "], EffectRows[" + updateRows + "], CostTime[" + (new Date().getTime() - startTime) + "ms]");
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

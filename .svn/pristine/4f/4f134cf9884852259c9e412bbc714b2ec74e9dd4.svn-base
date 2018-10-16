@@ -1,0 +1,725 @@
+package com.woodare.template.jpa.model;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import com.woodare.core.base.AbstractBusiModel;
+import com.woodare.framework.annotation.EntityDescriptor;
+import com.woodare.template.jpa.model.data.EnumDspChannel;
+import com.woodare.template.jpa.model.data.EnumDspMode;
+import com.woodare.template.jpa.model.data.EnumDspStatus;
+
+/**
+ * @author Luke
+ */
+@Entity
+@EntityDescriptor(name = "鉴权交易", category = "content")
+public class DownDspInvoice extends AbstractBusiModel {
+	private static final long serialVersionUID = 4644858587558158916L;
+
+	/** 接口版本号 */
+	@Column(length = 64)
+	private Integer versionNo;
+
+	/** 鉴权类型 */
+	@Column(length = 10, nullable = false)
+	private EnumDspMode dspMode;
+
+	/** 商户号 **/
+	@Column(length = 20, nullable = false)
+	private String mchNo;
+
+	/** 商户名 **/
+	@Column(length = 100)
+	private String mchName;
+
+	/** 平台流水号 */
+	@Column(length = 64, nullable = false)
+	private String transNo;
+
+	/** 平台日期yyyyMMdd */
+	@Column(length = 8, nullable = false)
+	private String transDate;
+
+	/** 下游交易流水号 */
+	@Column(length = 64, nullable = false)
+	private String tradeNo;
+
+	/** 订单时间, 格式：yyyyMMddHHmmss */
+	@Column(length = 14, nullable = false)
+	private String orderDate;
+
+	/** 异步通知地址 */
+	@Column(length = 512)
+	private String notifyUrl;
+
+	/** 代理商 **/
+	@Column(length = 256)
+	private String agentNo;
+
+	/** 通道标识 */
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private EnumDspChannel channel;
+
+	/** 通道账户编号 */
+	@Column(length = 64, nullable = false)
+	private String channelAccNo;
+
+	/** 通道账户名称 */
+	@Column(length = 20)
+	private String channelAccName;
+
+	/** 单笔费，单位：分 */
+	@Column(scale = 2, precision = 9, nullable = false)
+	private BigDecimal addFeeAmt;
+
+	/** 卡姓名 */
+	@Column(length = 30)
+	private String holderName;
+
+	/** 手机号 */
+	@Column(length = 16)
+	private String mobile;
+
+	/** 证件类型 */
+	@Column(length = 20)
+	private String identifyType;
+
+	/** 证件号 */
+	@Column(length = 50)
+	private String identifyNo;
+
+	/** 卡号 */
+	@Column(length = 30)
+	private String cardNo;
+
+	/** 卡CVV */
+	@Column(length = 5)
+	private String cardCvn;
+
+	/** 卡有效期-MMYY */
+	@Column(length = 4)
+	private String cardExpDate;
+
+	/** 备注信息 */
+	@Column(length = 127)
+	private String remark;
+
+	/** 商户交易手续费 */
+	@Column(scale = 2, precision = 9, nullable = false)
+	private BigDecimal mchPayFee;
+
+	/** 渠道交易手续费 */
+	@Column(scale = 2, precision = 9, nullable = false)
+	private BigDecimal channelPayFee;
+
+	/** 代理商利润 */
+	@Column(scale = 2, precision = 9)
+	private BigDecimal agentProfit;
+
+	/** 平台利润 */
+	@Column(scale = 2, precision = 9)
+	private BigDecimal profit;
+
+	/** 平台利润-额外 */
+	@Column(scale = 2, precision = 9)
+	private BigDecimal xtraProfit;
+
+	/** 已提交上游 */
+	@Column(nullable = false)
+	private Boolean sentUp;
+
+	/** 上游流水号 */
+	@Column(length = 64)
+	private String upTransNo;
+
+	/** 交易状态, 00=处理成功，计费、01=处理中、02=处理失败，不计费 */
+	@Column(length = 10, nullable = false)
+	@Enumerated(EnumType.ORDINAL)
+	private EnumDspStatus status;
+
+	/** 交易状态描述 */
+	@Column(length = 128)
+	private String statusDesc;
+
+	/** 状态更新时间 */
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date statusChgDate;
+
+	/** 验证结果, 00=验证成功、02=验证失败 */
+	@Column(length = 4)
+	private String verifyStatus;
+
+	/** 验证结果, 00=验证成功、02=验证失败 */
+	@Column(length = 128)
+	private String verifyStatusDesc;
+
+	/** 保留缺省域1 */
+	@Column(length = 100)
+	private String resv1;
+
+	/** 保留缺省域2 */
+	@Column(length = 200)
+	private String resv2;
+
+
+	private Date createDate;
+
+	@Override
+	public Date getCreateDate() {
+		return createDate;
+	}
+
+	@Override
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
+	}
+
+	/**
+	 * @return the remark
+	 */
+	public String getRemark() {
+		return remark;
+	}
+
+	/**
+	 * @param remark
+	 *            the remark to set
+	 */
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+	/**
+	 * @return the versionNo
+	 */
+	public Integer getVersionNo() {
+		return versionNo;
+	}
+
+	/**
+	 * @param versionNo
+	 *            the versionNo to set
+	 */
+	public void setVersionNo(Integer versionNo) {
+		this.versionNo = versionNo;
+	}
+
+	/**
+	 * @return the dspMode
+	 */
+	public EnumDspMode getDspMode() {
+		return dspMode;
+	}
+
+	/**
+	 * @param dspMode
+	 *            the dspMode to set
+	 */
+	public void setDspMode(EnumDspMode dspMode) {
+		this.dspMode = dspMode;
+	}
+
+	/**
+	 * @return the mchNo
+	 */
+	public String getMchNo() {
+		return mchNo;
+	}
+
+	/**
+	 * @param mchNo
+	 *            the mchNo to set
+	 */
+	public void setMchNo(String mchNo) {
+		this.mchNo = mchNo;
+	}
+
+	/**
+	 * @return the mchName
+	 */
+	public String getMchName() {
+		return mchName;
+	}
+
+	/**
+	 * @param mchName
+	 *            the mchName to set
+	 */
+	public void setMchName(String mchName) {
+		this.mchName = mchName;
+	}
+
+	/**
+	 * @return the transNo
+	 */
+	public String getTransNo() {
+		return transNo;
+	}
+
+	/**
+	 * @param transNo
+	 *            the transNo to set
+	 */
+	public void setTransNo(String transNo) {
+		this.transNo = transNo;
+	}
+
+	/**
+	 * @return the transDate
+	 */
+	public String getTransDate() {
+		return transDate;
+	}
+
+	/**
+	 * @param transDate
+	 *            the transDate to set
+	 */
+	public void setTransDate(String transDate) {
+		this.transDate = transDate;
+	}
+
+	/**
+	 * @return the tradeNo
+	 */
+	public String getTradeNo() {
+		return tradeNo;
+	}
+
+	/**
+	 * @param tradeNo
+	 *            the tradeNo to set
+	 */
+	public void setTradeNo(String tradeNo) {
+		this.tradeNo = tradeNo;
+	}
+
+	/**
+	 * @return the orderDate
+	 */
+	public String getOrderDate() {
+		return orderDate;
+	}
+
+	/**
+	 * @param orderDate
+	 *            the orderDate to set
+	 */
+	public void setOrderDate(String orderDate) {
+		this.orderDate = orderDate;
+	}
+
+	/**
+	 * @return the notifyUrl
+	 */
+	public String getNotifyUrl() {
+		return notifyUrl;
+	}
+
+	/**
+	 * @param notifyUrl
+	 *            the notifyUrl to set
+	 */
+	public void setNotifyUrl(String notifyUrl) {
+		this.notifyUrl = notifyUrl;
+	}
+
+	/**
+	 * @return the agentNo
+	 */
+	public String getAgentNo() {
+		return agentNo;
+	}
+
+	/**
+	 * @param agentNo
+	 *            the agentNo to set
+	 */
+	public void setAgentNo(String agentNo) {
+		this.agentNo = agentNo;
+	}
+
+	/**
+	 * @return the channel
+	 */
+	public EnumDspChannel getChannel() {
+		return channel;
+	}
+
+	/**
+	 * @param channel
+	 *            the channel to set
+	 */
+	public void setChannel(EnumDspChannel channel) {
+		this.channel = channel;
+	}
+
+	/**
+	 * @return the channelAccNo
+	 */
+	public String getChannelAccNo() {
+		return channelAccNo;
+	}
+
+	/**
+	 * @param channelAccNo
+	 *            the channelAccNo to set
+	 */
+	public void setChannelAccNo(String channelAccNo) {
+		this.channelAccNo = channelAccNo;
+	}
+
+	/**
+	 * @return the channelAccName
+	 */
+	public String getChannelAccName() {
+		return channelAccName;
+	}
+
+	/**
+	 * @param channelAccName
+	 *            the channelAccName to set
+	 */
+	public void setChannelAccName(String channelAccName) {
+		this.channelAccName = channelAccName;
+	}
+
+	/**
+	 * @return the addFeeAmt
+	 */
+	public BigDecimal getAddFeeAmt() {
+		return addFeeAmt;
+	}
+
+	/**
+	 * @param addFeeAmt
+	 *            the addFeeAmt to set
+	 */
+	public void setAddFeeAmt(BigDecimal addFeeAmt) {
+		this.addFeeAmt = addFeeAmt;
+	}
+
+	/**
+	 * @return the holderName
+	 */
+	public String getHolderName() {
+		return holderName;
+	}
+
+	/**
+	 * @param holderName
+	 *            the holderName to set
+	 */
+	public void setHolderName(String holderName) {
+		this.holderName = holderName;
+	}
+
+	/**
+	 * @return the mobile
+	 */
+	public String getMobile() {
+		return mobile;
+	}
+
+	/**
+	 * @param mobile
+	 *            the mobile to set
+	 */
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
+
+	/**
+	 * @return the identifyType
+	 */
+	public String getIdentifyType() {
+		return identifyType;
+	}
+
+	/**
+	 * @param identifyType
+	 *            the identifyType to set
+	 */
+	public void setIdentifyType(String identifyType) {
+		this.identifyType = identifyType;
+	}
+
+	/**
+	 * @return the identifyNo
+	 */
+	public String getIdentifyNo() {
+		return identifyNo;
+	}
+
+	/**
+	 * @param identifyNo
+	 *            the identifyNo to set
+	 */
+	public void setIdentifyNo(String identifyNo) {
+		this.identifyNo = identifyNo;
+	}
+
+	/**
+	 * @return the cardNo
+	 */
+	public String getCardNo() {
+		return cardNo;
+	}
+
+	/**
+	 * @param cardNo
+	 *            the cardNo to set
+	 */
+	public void setCardNo(String cardNo) {
+		this.cardNo = cardNo;
+	}
+
+	/**
+	 * @return the cardCvn
+	 */
+	public String getCardCvn() {
+		return cardCvn;
+	}
+
+	/**
+	 * @param cardCvn
+	 *            the cardCvn to set
+	 */
+	public void setCardCvn(String cardCvn) {
+		this.cardCvn = cardCvn;
+	}
+
+	/**
+	 * @return the cardExpDate
+	 */
+	public String getCardExpDate() {
+		return cardExpDate;
+	}
+
+	/**
+	 * @param cardExpDate
+	 *            the cardExpDate to set
+	 */
+	public void setCardExpDate(String cardExpDate) {
+		this.cardExpDate = cardExpDate;
+	}
+
+	/**
+	 * @return the mchPayFee
+	 */
+	public BigDecimal getMchPayFee() {
+		return mchPayFee;
+	}
+
+	/**
+	 * @param mchPayFee
+	 *            the mchPayFee to set
+	 */
+	public void setMchPayFee(BigDecimal mchPayFee) {
+		this.mchPayFee = mchPayFee;
+	}
+
+	/**
+	 * @return the channelPayFee
+	 */
+	public BigDecimal getChannelPayFee() {
+		return channelPayFee;
+	}
+
+	/**
+	 * @param channelPayFee
+	 *            the channelPayFee to set
+	 */
+	public void setChannelPayFee(BigDecimal channelPayFee) {
+		this.channelPayFee = channelPayFee;
+	}
+
+	/**
+	 * @return the agentProfit
+	 */
+	public BigDecimal getAgentProfit() {
+		return agentProfit;
+	}
+
+	/**
+	 * @param agentProfit
+	 *            the agentProfit to set
+	 */
+	public void setAgentProfit(BigDecimal agentProfit) {
+		this.agentProfit = agentProfit;
+	}
+
+	/**
+	 * @return the profit
+	 */
+	public BigDecimal getProfit() {
+		return profit;
+	}
+
+	/**
+	 * @param profit
+	 *            the profit to set
+	 */
+	public void setProfit(BigDecimal profit) {
+		this.profit = profit;
+	}
+
+	/**
+	 * @return the xtraProfit
+	 */
+	public BigDecimal getXtraProfit() {
+		return xtraProfit;
+	}
+
+	/**
+	 * @param xtraProfit
+	 *            the xtraProfit to set
+	 */
+	public void setXtraProfit(BigDecimal xtraProfit) {
+		this.xtraProfit = xtraProfit;
+	}
+
+	/**
+	 * @return the sentUp
+	 */
+	public Boolean getSentUp() {
+		return sentUp;
+	}
+
+	/**
+	 * @param sentUp
+	 *            the sentUp to set
+	 */
+	public void setSentUp(Boolean sentUp) {
+		this.sentUp = sentUp;
+	}
+
+	/**
+	 * @return the upTransNo
+	 */
+	public String getUpTransNo() {
+		return upTransNo;
+	}
+
+	/**
+	 * @param upTransNo
+	 *            the upTransNo to set
+	 */
+	public void setUpTransNo(String upTransNo) {
+		this.upTransNo = upTransNo;
+	}
+
+	/**
+	 * @return the status
+	 */
+	public EnumDspStatus getStatus() {
+		return status;
+	}
+
+	/**
+	 * @param status
+	 *            the status to set
+	 */
+	public void setStatus(EnumDspStatus status) {
+		this.status = status;
+	}
+
+	/**
+	 * @return the statusDesc
+	 */
+	public String getStatusDesc() {
+		return statusDesc;
+	}
+
+	/**
+	 * @param statusDesc
+	 *            the statusDesc to set
+	 */
+	public void setStatusDesc(String statusDesc) {
+		this.statusDesc = statusDesc;
+	}
+
+	/**
+	 * @return the statusChgDate
+	 */
+	public Date getStatusChgDate() {
+		return statusChgDate;
+	}
+
+	/**
+	 * @param statusChgDate
+	 *            the statusChgDate to set
+	 */
+	public void setStatusChgDate(Date statusChgDate) {
+		this.statusChgDate = statusChgDate;
+	}
+
+	/**
+	 * @return the verifyStatus
+	 */
+	public String getVerifyStatus() {
+		return verifyStatus;
+	}
+
+	/**
+	 * @param verifyStatus
+	 *            the verifyStatus to set
+	 */
+	public void setVerifyStatus(String verifyStatus) {
+		this.verifyStatus = verifyStatus;
+	}
+
+	/**
+	 * @return the verifyStatusDesc
+	 */
+	public String getVerifyStatusDesc() {
+		return verifyStatusDesc;
+	}
+
+	/**
+	 * @param verifyStatusDesc
+	 *            the verifyStatusDesc to set
+	 */
+	public void setVerifyStatusDesc(String verifyStatusDesc) {
+		this.verifyStatusDesc = verifyStatusDesc;
+	}
+
+	/**
+	 * @return the resv1
+	 */
+	public String getResv1() {
+		return resv1;
+	}
+
+	/**
+	 * @param resv1
+	 *            the resv1 to set
+	 */
+	public void setResv1(String resv1) {
+		this.resv1 = resv1;
+	}
+
+	/**
+	 * @return the resv2
+	 */
+	public String getResv2() {
+		return resv2;
+	}
+
+	/**
+	 * @param resv2
+	 *            the resv2 to set
+	 */
+	public void setResv2(String resv2) {
+		this.resv2 = resv2;
+	}
+}

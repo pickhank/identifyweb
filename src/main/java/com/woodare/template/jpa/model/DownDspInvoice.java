@@ -170,7 +170,6 @@ public class DownDspInvoice extends AbstractBusiModel {
 	@Column(length = 200)
 	private String resv2;
 
-
 	/**
 	 * @return the remark
 	 */

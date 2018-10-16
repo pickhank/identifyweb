@@ -80,20 +80,6 @@ td {
 				<input class="input-box" type="text" name="rearMoneyYuan" style="width: 80px" value="${item.rearMoneyYuan }" onkeyup="value=value.replace(/[^\d]/g,'')">
 			</td>
 		</tr>
-		<!-- <tr>
-			<td class="liner-box-left required">审核时间:</td>
-			<td class="liner-box-right">
-				<div class="ms-col-fix-100 clear">
-					<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="yyyy/MM/dd" name="auditDate"/>
-					<script>
-                        $(".date-picker").datepicker($.datepicker.regional[ "zh-CN" ]);
-                        $("select[name='dateCate']").change(function(){
-                            $(".custom-d-cate").css("visibility", ($(this).val() == 'CUSTOM' ? "visible" : "hidden"));
-                        }).change();
-					</script>
-				</div>
-			</td>
-		</tr> -->
 		<tr>
 			<td class="liner-box-left required">备注:</td>
 			<td class="liner-box-right">

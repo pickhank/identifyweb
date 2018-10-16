@@ -456,9 +456,9 @@ public class DownMerchantBalanceService implements IDownMerchantBalanceService {
 			log.info(String.format("DspBalChargeBegin[%s/%s][%s]%s", invoice.getMchNo(), invoice.getTransNo(), (direction > 0 ? "减" : "加"), feeAmt));
 
 			DownMerchantData merchant = DownMerchants.getByCode(invoice.getMchNo());
-			if (!SDFFactory.DATE.format(new Date()).equals(merchant.getSettleDate())) {
+			/**if (!SDFFactory.DATE.format(new Date()).equals(merchant.getSettleDate())) {
 				throw new MessageWooException("正在进行日终跑批，请稍后再试", EnumError.ERR_8003);
-			}
+			}*/
 
 			// 默认实时账户
 			EnumBalanceAccType accType = EnumBalanceAccType.Settle;

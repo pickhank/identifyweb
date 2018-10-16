@@ -100,8 +100,6 @@ public class SummaryDAO extends AbstractPagedDAO<DownDsapInoviceHis> implements 
         // Send back returns
         return this.getPagedList(totalQuery, query, searchData);
     }
-
-
 }
 
 

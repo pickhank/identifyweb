@@ -60,12 +60,18 @@
 	</div>
 	<div class="ms-col-fix-100 clear">
 		<label for="startDate" class="custom-d-cate">From：</label>
-		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="开始时间" name="startDate" value="<fmt:formatDate value="${search.startDate}" pattern="yyyy-MM-dd"/>">
-	</div>
+<<<<<<< .mine		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="开始时间" name="startDate" value="<fmt:formatDate value="${search.startDate}" pattern="yyyy-MM-dd"/>">
+=======		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="开始时间" name="startDate" value="<fmt:formatDate value="${search.startDate}" pattern="yyyy-MM-dd"/>"></input>
+>>>>>>> .theirs	</div>
 	<div class="ms-col-fix-100 clear">
 		<label for="endDate" class="custom-d-cate">To：</label>
-		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="结束时间" name="endDate" value="<fmt:formatDate value="${search.endDate}" pattern="yyyy-MM-dd"/>">
-		<script>
+<<<<<<< .mine		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="结束时间" name="endDate" value="<fmt:formatDate value="${search.endDate}" pattern="yyyy-MM-dd"/>">
+=======		<input type="text" class="input-box search-input-box date-picker custom-d-cate" placeholder="结束时间" name="endDate" value="<fmt:formatDate value="${search.endDate}" pattern="yyyy-MM-dd"/>"></input>
+>>>>>>> .theirs		<script>
+			$(".date-picker").datepicker($.datepicker.regional[ "zh-CN" ]);
+			$("select[name='dateCate']").change(function(){
+				$(".custom-d-cate").css("visibility", ($(this).val() == 'CUSTOM' ? "visible" : "hidden"));
+			}).change();
             $(".date-picker").datepicker($.datepicker.regional[ "zh-CN" ]);
             $("select[name='dateCate']").change(function(){
                 $(".custom-d-cate").css("visibility", ($(this).val() == 'CUSTOM' ? "visible" : "hidden"));

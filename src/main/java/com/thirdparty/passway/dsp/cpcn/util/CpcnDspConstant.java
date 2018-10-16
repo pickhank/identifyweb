@@ -26,8 +26,7 @@ public class CpcnDspConstant {
 	 */
 	public static void initMerchantCerts() {
 		try {
-			String dspConfigPath = SysProperties.getInstance().getProperty("cpcn.certs.path", "F:\\1_svnDemo\\xuesongli_identifyweb\\target\\classes\\certs\\dsp");
-
+			String dspConfigPath = SysProperties.getInstance().getProperty("cpcn.certs.path", "F:\\1_svnDemo\\xuesongli_identifyweb\\src\\main\\resources\\certs\\dsp");
 			// 初始化支付环境
 			DSPInstitutionEnvironment.initialize(dspConfigPath);
 			// 初始化行业分类字典
